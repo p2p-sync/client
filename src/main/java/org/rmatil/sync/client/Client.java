@@ -6,6 +6,7 @@ import org.rmatil.sync.client.command.ICliRunnable;
 import org.rmatil.sync.client.command.clean.CleanCommand;
 import org.rmatil.sync.client.command.config.GetConfigCommand;
 import org.rmatil.sync.client.command.config.SetConfigCommand;
+import org.rmatil.sync.client.command.connect.ConnectCommand;
 import org.rmatil.sync.client.command.init.InitCommand;
 import org.rmatil.sync.client.executor.CommandExecutor;
 import org.rmatil.sync.client.help.Help;
@@ -41,6 +42,7 @@ public class Client {
                 .withCommand(Help.class)
                 .withCommand(InitCommand.class)
                 .withCommand(CleanCommand.class)
+                .withCommand(ConnectCommand.class)
                 .withDefaultCommand(Help.class);
 
 
