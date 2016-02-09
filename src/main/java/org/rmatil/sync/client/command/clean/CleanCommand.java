@@ -28,13 +28,13 @@ public class CleanCommand implements ICliRunnable {
     @Inject
     private HelpOption<CleanCommand> help;
 
-    @Option(name = {"-a", "--clean-all"}, title = "CleanAll", description = "Remove the configuration directory as well as the object store from the specified synced folder")
+    @Option(name = {"-a", "--clean-all"}, title = "CleanAll", arity = 1, description = "Remove the configuration directory as well as the object store from the specified synced folder")
     private String cleanAll;
 
     @Option(name = {"-c", "--clean"}, title = "CleanConfig", description = "Remove the configuration directory")
     private boolean cleanConfig;
 
-    @Option(name = {"-o", "--clean-os"}, title = "CleanObjectStore", description = "Remove the object store from the specified synced folder")
+    @Option(name = {"-o", "--clean-os"}, title = "CleanObjectStore", arity = 1, description = "Remove the object store from the specified synced folder")
     private String cleanObjectStore;
 
     @Override

@@ -29,7 +29,7 @@ public class InitCommand implements ICliRunnable {
     @Inject
     private HelpOption<InitCommand> help;
 
-    @Option(name = {"-p", "--path"}, title = "SyncFolderPath", description = "The path to the sync folder")
+    @Option(name = {"-p", "--path"}, title = "SyncFolderPath", arity = 1, description = "The path to the sync folder")
     @Required
     private String syncFolder;
 

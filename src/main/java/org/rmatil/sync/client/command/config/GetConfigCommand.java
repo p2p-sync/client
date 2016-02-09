@@ -4,7 +4,6 @@ import com.github.rvesse.airline.HelpOption;
 import com.github.rvesse.airline.annotations.Command;
 import com.github.rvesse.airline.annotations.Option;
 import org.rmatil.sync.client.command.ICliRunnable;
-import org.rmatil.sync.client.executor.CommandExecutor;
 import org.rmatil.sync.core.Sync;
 import org.rmatil.sync.core.init.ApplicationConfig;
 
@@ -44,7 +43,7 @@ public class GetConfigCommand implements ICliRunnable {
     @Option(name = {"--privatekey"}, title = "PrivateKeyPath", description = "The path to the private key to use for the client")
     private boolean privateKeyPath;
 
-    @Option(name = {"--bootstrap-ip"}, title = "BootstrapIP", description = "The ip address of another online client to which this device should bootstrap on start up")
+    @Option(name = {"--bootstrap-ip"}, title = "BootstrapIp", description = "The ip address of another online client to which this device should bootstrap on start up")
     private boolean bootstrapIp;
 
     @Option(name = {"--ipv6"}, title = "IpV6", description = "Whether the IP address is an IPv6 address")
@@ -52,11 +51,6 @@ public class GetConfigCommand implements ICliRunnable {
 
     @Option(name = {"--bootstrap-port"}, title = "BootstrapPort", description = "The port of the other client to which this device should bootstrap on start up")
     private boolean bootstrapPort;
-
-
-    public static void main(String[] args) {
-        CommandExecutor.executeSingleCommand(SetConfigCommand.class, args);
-    }
 
     @Override
     public int run() {
