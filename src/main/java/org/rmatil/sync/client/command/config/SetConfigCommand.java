@@ -4,13 +4,21 @@ import com.github.rvesse.airline.HelpOption;
 import com.github.rvesse.airline.annotations.Command;
 import com.github.rvesse.airline.annotations.Option;
 import org.rmatil.sync.client.command.ICliRunnable;
-import org.rmatil.sync.client.executor.CommandExecutor;
+import org.rmatil.sync.client.security.KeyPairUtils;
 import org.rmatil.sync.core.Sync;
+import org.rmatil.sync.core.config.Config;
 import org.rmatil.sync.core.init.ApplicationConfig;
 import org.rmatil.sync.core.model.RemoteClientLocation;
 
 import javax.inject.Inject;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
 
 @Command(name = "set-config", description = "Set application wide configuration values")
 public class SetConfigCommand implements ICliRunnable {
@@ -54,10 +62,8 @@ public class SetConfigCommand implements ICliRunnable {
     @Option(name = {"--bootstrap-port"}, title = "BootstrapPort", arity = 1, description = "The port of the other client to which this device should bootstrap on start up")
     private Integer bootstrapPort;
 
-
-    public static void main(String[] args) {
-        CommandExecutor.executeSingleCommand(SetConfigCommand.class, args);
-    }
+    @Option(name = {"--generate-keypair"}, title = "GenerateKeyPair", description = "Generate a keypair and store them in the config folder")
+    private boolean generateKeyPair;
 
     @Override
     public int run() {
@@ -142,6 +148,30 @@ public class SetConfigCommand implements ICliRunnable {
                                 )
                         );
                     }
+                }
+
+                if (this.generateKeyPair) {
+                    KeyPairGenerator keyPairGenerator;
+                    try {
+                        keyPairGenerator = KeyPairGenerator.getInstance("RSA");
+                    } catch (NoSuchAlgorithmException e) {
+                        System.out.println("Failed to create key pair: " + e.getMessage());
+                        return 1;
+                    }
+
+                    KeyPair keyPair = keyPairGenerator.generateKeyPair();
+
+                    String absoluteConfigFolderPath = Config.DEFAULT.getConfigFolderPath().replaceFirst("^~", System.getProperty("user.home"));
+
+                    Path publicKeyPath = Paths.get(absoluteConfigFolderPath).resolve(Config.DEFAULT.getPublicKeyFileName());
+                    Path privateKeyPath = Paths.get(absoluteConfigFolderPath).resolve(Config.DEFAULT.getPrivateKeyFileName());
+
+                    KeyPairUtils.writePublicKey((RSAPublicKey) keyPair.getPublic(), publicKeyPath.toString());
+                    KeyPairUtils.writePrivateKey((RSAPrivateKey) keyPair.getPrivate(), privateKeyPath.toString());
+
+
+                    appConfig.setPublicKeyPath(publicKeyPath.toString());
+                    appConfig.setPrivateKeyPath(privateKeyPath.toString());
                 }
 
                 Sync.writeApplicationConfig(appConfig);
