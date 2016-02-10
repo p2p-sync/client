@@ -5,6 +5,7 @@ import com.github.rvesse.airline.annotations.Command;
 import com.github.rvesse.airline.annotations.Option;
 import com.github.rvesse.airline.annotations.restrictions.Required;
 import org.rmatil.sync.client.command.ICliRunnable;
+import org.rmatil.sync.client.console.Console;
 import org.rmatil.sync.client.security.KeyPairUtils;
 import org.rmatil.sync.client.validator.IValidator;
 import org.rmatil.sync.client.validator.PathValidator;
@@ -54,18 +55,18 @@ public class ConnectCommand implements ICliRunnable {
             try {
                 ApplicationConfig appConfig = Sync.getApplicationConfig();
 
-                String boostrapAddress = null;
+                String bootstrapAddress = null;
                 Integer bootstrapPort = null;
 
                 if (null != appConfig.getDefaultBootstrapLocation()) {
-                    boostrapAddress = appConfig.getDefaultBootstrapLocation().getIpAddress();
+                    bootstrapAddress = appConfig.getDefaultBootstrapLocation().getIpAddress();
                     bootstrapPort = appConfig.getDefaultBootstrapLocation().getPort();
                 }
 
                 if (null != this.ipAddress) {
-                    boostrapAddress = this.ipAddress;
-                } else if (null != boostrapAddress) {
-                    System.out.println("Using default bootstrap address " + boostrapAddress);
+                    bootstrapAddress = this.ipAddress;
+                } else if (null != bootstrapAddress) {
+                    System.out.println("Using default bootstrap address " + bootstrapAddress);
                 } else {
                     System.out.println("No bootstrap address configured. Starting as bootstrap peer");
 
@@ -113,6 +114,8 @@ public class ConnectCommand implements ICliRunnable {
                                     clientDevice.getPeerAddress().tcpPort()
                     );
 
+                    this.startConsole(sync);
+
                     return 0;
                 }
 
@@ -121,7 +124,7 @@ public class ConnectCommand implements ICliRunnable {
                 } else if (null != bootstrapPort) {
                     System.out.println("Using default bootstrap port " + bootstrapPort);
                 } else {
-                    System.out.println("No bootstrap port is specified. Can not connect to " + boostrapAddress);
+                    System.out.println("No bootstrap port is specified. Can not connect to " + bootstrapAddress);
                     return 1;
                 }
 
@@ -158,7 +161,7 @@ public class ConnectCommand implements ICliRunnable {
                         appConfig.getSalt(),
                         appConfig.getDefaultPort(),
                         new RemoteClientLocation(
-                                boostrapAddress,
+                                bootstrapAddress,
                                 appConfig.getDefaultBootstrapLocation().isIpV6(),
                                 bootstrapPort
                         )
@@ -173,6 +176,8 @@ public class ConnectCommand implements ICliRunnable {
                                 clientDevice.getPeerAddress().tcpPort()
                 );
 
+                this.startConsole(sync);
+
             } catch (IOException e) {
                 System.out.println("Could not read the application configuration. Did you initialise the app first?");
                 return 1;
@@ -180,5 +185,13 @@ public class ConnectCommand implements ICliRunnable {
         }
 
         return 0;
+    }
+
+    private void startConsole(Sync sync) {
+        Console console = new Console(sync);
+
+        console.run();
+
+        sync.shutdown();
     }
 }
