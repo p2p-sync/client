@@ -44,6 +44,18 @@ public class SetConfigCommand implements ICliRunnable {
     @Option(name = {"-s", "--salt"}, title = "Salt", arity = 1, description = "The salt of the user's password")
     private String salt;
 
+    @Option(name = {"-c", "--cache-ttl"}, title = "CacheTtl", arity = 1, description = "The time to live for elements in the DHT cache (in milliseconds)")
+    private Long cacheTtl;
+
+    @Option(name = {"-d", "--peer-discovery-timeout"}, title = "PeerDiscoveryTimeout", arity = 1, description = "The maximum time to wait until a peer should be discovered (in milliseconds)")
+    private Long peerDiscoveryTimeout;
+
+    @Option(name = {"-b", "--peer-bootstrap-timeout"}, title = "PeerBootstrapTimeout", arity = 1, description = "The maximum time to wait until this peer should have been bootstrapped to the remote peer (in milliseconds)")
+    private Long peerBootstrapTimeout;
+
+    @Option(name = {"-a", "--peer-shutdown-timeout"}, title = "PeerShutdownTimeout", arity = 1, description = "The maximum time to wait until this peer has successfully announced his friendly shutdown to neighbour peers (in milliseconds)")
+    private Long shutdownAnnounceTimeout;
+
     @Option(name = {"-n", "--port"}, title = "Port", arity = 1, description = "The default port to use for setting up this client")
     private Integer defaultPort;
 
@@ -82,6 +94,22 @@ public class SetConfigCommand implements ICliRunnable {
 
                 if (null != this.salt) {
                     appConfig.setSalt(this.salt);
+                }
+
+                if (null != this.cacheTtl) {
+                    appConfig.setCacheTtl(this.cacheTtl);
+                }
+
+                if (null != this.peerDiscoveryTimeout) {
+                    appConfig.setPeerDiscoveryTimeout(this.peerDiscoveryTimeout);
+                }
+
+                if (null != this.peerBootstrapTimeout) {
+                    appConfig.setPeerBootstrapTimeout(this.peerBootstrapTimeout);
+                }
+
+                if (null != this.shutdownAnnounceTimeout) {
+                    appConfig.setShutdownAnnounceTimeout(this.shutdownAnnounceTimeout);
                 }
 
                 if (null != this.defaultPort) {

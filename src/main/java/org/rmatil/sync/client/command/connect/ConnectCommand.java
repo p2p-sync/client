@@ -10,6 +10,7 @@ import org.rmatil.sync.client.security.KeyPairUtils;
 import org.rmatil.sync.client.validator.IValidator;
 import org.rmatil.sync.client.validator.PathValidator;
 import org.rmatil.sync.core.Sync;
+import org.rmatil.sync.core.exception.InitializationStartException;
 import org.rmatil.sync.core.init.ApplicationConfig;
 import org.rmatil.sync.core.model.RemoteClientLocation;
 import org.rmatil.sync.network.core.model.ClientDevice;
@@ -101,8 +102,11 @@ public class ConnectCommand implements ICliRunnable {
                             appConfig.getUserName(),
                             appConfig.getPassword(),
                             appConfig.getSalt(),
-                            appConfig.getDefaultPort(),
-                            null
+                            appConfig.getCacheTtl(),
+                            appConfig.getPeerDiscoveryTimeout(),
+                            appConfig.getPeerBootstrapTimeout(),
+                            appConfig.getPeerBootstrapTimeout(),
+                            appConfig.getDefaultPort()
                     );
 
                     System.out.println(
@@ -154,15 +158,22 @@ public class ConnectCommand implements ICliRunnable {
 
                 // now connect to the specified boostrap peer
                 Sync sync = new Sync(Paths.get(this.syncFolder));
+
+                // TODO: check that all values are correct (at least username, ...)
+
                 ClientDevice clientDevice = sync.connect(
                         keyPair,
                         appConfig.getUserName(),
                         appConfig.getPassword(),
                         appConfig.getSalt(),
+                        appConfig.getCacheTtl(),
+                        appConfig.getPeerDiscoveryTimeout(),
+                        appConfig.getPeerBootstrapTimeout(),
+                        appConfig.getPeerBootstrapTimeout(),
                         appConfig.getDefaultPort(),
                         new RemoteClientLocation(
                                 bootstrapAddress,
-                                appConfig.getDefaultBootstrapLocation().isIpV6(),
+                                appConfig.getDefaultBootstrapLocation().isIpV6(), // TODO: bootstrap locatino may not be set
                                 bootstrapPort
                         )
                 );
@@ -178,7 +189,8 @@ public class ConnectCommand implements ICliRunnable {
 
                 this.startConsole(sync);
 
-            } catch (IOException e) {
+
+            } catch (IOException | InitializationStartException e) {
                 System.out.println("Could not read the application configuration. Did you initialise the app first?");
                 return 1;
             }

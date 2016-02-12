@@ -34,6 +34,18 @@ public class GetConfigCommand implements ICliRunnable {
     @Option(name = {"-s", "--salt"}, title = "Salt", description = "The salt of the user's password")
     private boolean salt;
 
+    @Option(name = {"-c", "--cache-ttl"}, title = "CacheTtl", description = "The time to live for elements in the DHT cache (in milliseconds)")
+    private boolean cacheTtl;
+
+    @Option(name = {"-d", "--peer-discovery-timeout"}, title = "PeerDiscoveryTimeout", description = "The maximum time to wait until a peer should be discovered (in milliseconds)")
+    private boolean peerDiscoveryTimeout;
+
+    @Option(name = {"-b", "--peer-bootstrap-timeout"}, title = "PeerBootstrapTimeout", description = "The maximum time to wait until this peer should have been bootstrapped to the remote peer (in milliseconds)")
+    private boolean peerBootstrapTimeout;
+
+    @Option(name = {"-a", "--peer-shutdown-timeout"}, title = "PeerShutdownTimeout", description = "The maximum time to wait until this peer has successfully announced his friendly shutdown to neighbour peers (in milliseconds)")
+    private boolean shutdownAnnounceTimeout;
+
     @Option(name = {"-n", "--port"}, title = "Port", description = "The default port to use for setting up this client")
     private boolean defaultPort;
 
@@ -69,6 +81,22 @@ public class GetConfigCommand implements ICliRunnable {
 
                 if (this.salt) {
                     System.out.println("Salt: " + appConfig.getSalt());
+                }
+
+                if (this.cacheTtl) {
+                    System.out.println("CacheTtl: " + appConfig.getCacheTtl() + " ms");
+                }
+
+                if (this.peerDiscoveryTimeout) {
+                    System.out.println("Peer Discovery Timeout: " + appConfig.getPeerDiscoveryTimeout() + " ms");
+                }
+
+                if (this.peerBootstrapTimeout) {
+                    System.out.println("Peer Bootstrap Timeout: " + appConfig.getPeerBootstrapTimeout() + " ms");
+                }
+
+                if (this.shutdownAnnounceTimeout) {
+                    System.out.println("Peer Shutdown Timeout: " + appConfig.getShutdownAnnounceTimeout() + " ms");
                 }
 
                 if (this.defaultPort) {
