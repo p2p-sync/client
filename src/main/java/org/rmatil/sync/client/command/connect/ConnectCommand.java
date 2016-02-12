@@ -6,6 +6,7 @@ import com.github.rvesse.airline.annotations.Option;
 import com.github.rvesse.airline.annotations.restrictions.Required;
 import org.rmatil.sync.client.command.ICliRunnable;
 import org.rmatil.sync.client.console.Console;
+import org.rmatil.sync.client.console.io.Output;
 import org.rmatil.sync.client.security.KeyPairUtils;
 import org.rmatil.sync.client.validator.IValidator;
 import org.rmatil.sync.client.validator.PathValidator;
@@ -118,7 +119,21 @@ public class ConnectCommand implements ICliRunnable {
                                     clientDevice.getPeerAddress().tcpPort()
                     );
 
-                    this.startConsole(sync);
+                    // also register a shutdown hook to correctly terminate Sync
+                    Runtime.getRuntime().addShutdownHook(new Thread() {
+                        @Override
+                        public void run() {
+                            // shut down correctly
+                            Output.print("Shutting down. Please wait... ");
+                            sync.shutdown();
+                            Output.println("Complete");
+                        }
+                    });
+
+                    Console console = new Console(sync);
+                    console.run();
+
+                    sync.shutdown();
 
                     return 0;
                 }
@@ -157,7 +172,7 @@ public class ConnectCommand implements ICliRunnable {
                 KeyPair keyPair = new KeyPair(publicKey, privateKey);
 
                 // now connect to the specified boostrap peer
-                Sync sync = new Sync(Paths.get(this.syncFolder));
+                final Sync sync = new Sync(Paths.get(this.syncFolder));
 
                 // TODO: check that all values are correct (at least username, ...)
 
@@ -187,8 +202,21 @@ public class ConnectCommand implements ICliRunnable {
                                 clientDevice.getPeerAddress().tcpPort()
                 );
 
-                this.startConsole(sync);
+                // also register a shutdown hook to correctly terminate Sync
+                Runtime.getRuntime().addShutdownHook(new Thread() {
+                    @Override
+                    public void run() {
+                        // shut down correctly
+                        Output.print("Shutting down. Please wait... ");
+                        sync.shutdown();
+                        Output.println("Complete");
+                    }
+                });
 
+                Console console = new Console(sync);
+                console.run();
+
+                sync.shutdown();
 
             } catch (IOException | InitializationStartException e) {
                 System.out.println("Could not read the application configuration. Did you initialise the app first?");
@@ -199,11 +227,4 @@ public class ConnectCommand implements ICliRunnable {
         return 0;
     }
 
-    private void startConsole(Sync sync) {
-        Console console = new Console(sync);
-
-        console.run();
-
-        sync.shutdown();
-    }
 }
