@@ -47,50 +47,5 @@ public class Client {
 
 
         CommandExecutor.executeCli(builder.build(), args);
-
-
-//        Sync sync = new Sync(path);
-//        ClientDevice client1 = sync.init(keyPair, "raphael", "password", "salt", 4003, null);
-//
-//        Sync sync2 = new Sync(path2);
-//        sync2.connect(keyPair, "raphael", "password", "salt", 4004, new RemoteClientLocation(
-//                client1.getPeerAddress().inetAddress().getHostName(),
-//                client1.getPeerAddress().isIPv6(),
-//                client1.getPeerAddress().tcpPort()
-//        ));
-    }
-
-    protected static void initSync(String targetSyncPath)
-            throws IllegalArgumentException {
-
-        Path syncFolder = Client.validateSyncFolder(targetSyncPath);
-
-        Sync app = new Sync(syncFolder);
-        try {
-            Sync.init(syncFolder);
-        } catch (IOException e) {
-            throw new RuntimeException("An exception occurred during initiating the synced folder settings. See logs for more information. Error: " + e.getMessage());
-        }
-    }
-
-    protected static void connect() {
-
-    }
-
-    protected static void bootstrap(String targetSyncPath) {
-        Path syncFolder = Client.validateSyncFolder(targetSyncPath);
-
-        Sync sync = new Sync(syncFolder);
-//        sync.connect()
-    }
-
-    protected static Path validateSyncFolder(String targetSyncPath) {
-        Path syncFolder = Paths.get(targetSyncPath).toAbsolutePath();
-
-        if (! syncFolder.toFile().exists()) {
-            throw new IllegalArgumentException("The given target path " + syncFolder.toString() + " does not exist");
-        }
-
-        return syncFolder;
     }
 }
