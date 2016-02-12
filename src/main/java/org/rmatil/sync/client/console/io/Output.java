@@ -26,6 +26,10 @@ public class Output {
         }
     }
 
+    public static void newLine() {
+        System.out.println();
+    }
+
     public static void print(String text) {
         System.out.print(text);
     }
@@ -34,4 +38,11 @@ public class Output {
         System.out.println(text);
     }
 
+    public static void printError(Exception e) {
+        if (null != e.getMessage()) {
+            Output.println("An error occurred during execution of the command: " + e.getMessage());
+        } else {
+            Output.println("An error occurred during execution of the command. No exception message provided. See log for more details");
+        }
+    }
 }

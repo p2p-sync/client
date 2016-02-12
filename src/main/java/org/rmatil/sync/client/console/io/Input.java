@@ -1,5 +1,6 @@
 package org.rmatil.sync.client.console.io;
 
+import java.util.InputMismatchException;
 import java.util.Scanner;
 
 public class Input {
@@ -10,13 +11,12 @@ public class Input {
         scanner.close();
     }
 
-    // TODO: handle input errors
-
     public static String getInput() {
         return scanner.next();
     }
 
-    public static int getNextInt() {
+    public static int getNextInt()
+            throws InputMismatchException {
         return scanner.nextInt();
     }
 }

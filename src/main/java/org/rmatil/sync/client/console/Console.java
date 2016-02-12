@@ -7,6 +7,7 @@ import org.rmatil.sync.client.console.menu.SharingMenu;
 import org.rmatil.sync.core.Sync;
 
 import java.util.ArrayList;
+import java.util.InputMismatchException;
 import java.util.List;
 
 public class Console {
@@ -28,18 +29,35 @@ public class Console {
     public void run() {
         while (ItemStatus.RUNNING == this.itemStatus.getItemStatus()) {
 
-            // TODO: print items
+            Output.newLine();
+            Output.println("Select the action to invoke:");
+
+            // print items
             Output.printItems(this.items);
 
-            // TODO: scan input
-            int selection = Input.getNextInt();
+            // scan input
+            int selection;
+            try {
+                selection = Input.getNextInt();
+            } catch (InputMismatchException e) {
+                Output.println("Invalid input. Try again");
+                continue;
+            }
 
-            // TODO: invoke correct item
+            // invoke correct item
             if (selection >= 0 && selection <= this.items.size() - 1) {
-                this.items.get(selection).execute();
+                try {
+                    this.items.get(selection).execute();
+                } catch (Exception e) {
+                    // catch all exceptions here to avoid printing
+                    // an ugly stack trace on the command
+                    Output.printError(e);
+                }
             } else {
                 Output.println("Invalid selection. Try again");
             }
         }
+
+        Input.close();
     }
 }
