@@ -26,7 +26,7 @@ public class SharingMenu implements IMenu {
         this.itemStatus = new ItemStatusHolder(ItemStatus.RUNNING);
         this.menuItems = new ArrayList<>();
         this.menuItems.add(new ShareItem(this.sync));
-        this.menuItems.add(new UnshareItem());
+        this.menuItems.add(new UnshareItem(this.sync));
         this.menuItems.add(new ExitItem(this.itemStatus));
     }
 
