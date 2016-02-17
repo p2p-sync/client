@@ -5,7 +5,6 @@ import org.rmatil.sync.client.console.io.Input;
 import org.rmatil.sync.client.console.io.Output;
 import org.rmatil.sync.core.Sync;
 import org.rmatil.sync.core.exception.SharingFailedException;
-import org.rmatil.sync.core.syncer.sharing.SharingSyncer;
 import org.rmatil.sync.core.syncer.sharing.event.ShareEvent;
 import org.rmatil.sync.persistence.api.IPathElement;
 import org.rmatil.sync.persistence.api.IStorageAdapter;
@@ -76,10 +75,10 @@ public class ShareItem implements IItem {
             }
 
             // now get all children
-            Output.println("Sharing " + pathToShare + " and all its contents with user " +  username + " (Access: " + accessType + ")");
+            Output.println("Sharing " + inputPath + " and all its contents with user " + username + " (Access: " + accessType + ")");
 
             ShareEvent shareEvent = new ShareEvent(
-                    pathToShare,
+                    Paths.get(inputPath),
                     accessType,
                     username
             );
