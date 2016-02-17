@@ -17,8 +17,8 @@ import java.nio.file.Paths;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
-import java.security.interfaces.DSAPrivateKey;
-import java.security.interfaces.DSAPublicKey;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
 
 @Command(name = "set-config", description = "Set application wide configuration values")
 public class SetConfigCommand implements ICliRunnable {
@@ -181,7 +181,7 @@ public class SetConfigCommand implements ICliRunnable {
                 if (this.generateKeyPair) {
                     KeyPairGenerator keyPairGenerator;
                     try {
-                        keyPairGenerator = KeyPairGenerator.getInstance("DSA");
+                        keyPairGenerator = KeyPairGenerator.getInstance("RSA");
                     } catch (NoSuchAlgorithmException e) {
                         System.out.println("Failed to create key pair: " + e.getMessage());
                         return 1;
@@ -194,8 +194,8 @@ public class SetConfigCommand implements ICliRunnable {
                     Path publicKeyPath = Paths.get(absoluteConfigFolderPath).resolve(Config.DEFAULT.getPublicKeyFileName());
                     Path privateKeyPath = Paths.get(absoluteConfigFolderPath).resolve(Config.DEFAULT.getPrivateKeyFileName());
 
-                    KeyPairUtils.writePublicKey((DSAPublicKey) keyPair.getPublic(), publicKeyPath.toString());
-                    KeyPairUtils.writePrivateKey((DSAPrivateKey) keyPair.getPrivate(), privateKeyPath.toString());
+                    KeyPairUtils.writePublicKey((RSAPublicKey) keyPair.getPublic(), publicKeyPath.toString());
+                    KeyPairUtils.writePrivateKey((RSAPrivateKey) keyPair.getPrivate(), privateKeyPath.toString());
 
 
                     appConfig.setPublicKeyPath(publicKeyPath.toString());
