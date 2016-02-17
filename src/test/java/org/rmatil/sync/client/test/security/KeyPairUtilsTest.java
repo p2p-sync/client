@@ -14,8 +14,8 @@ import java.nio.file.Paths;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
-import java.security.interfaces.RSAPrivateKey;
-import java.security.interfaces.RSAPublicKey;
+import java.security.interfaces.DSAPrivateKey;
+import java.security.interfaces.DSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -26,8 +26,8 @@ public class KeyPairUtilsTest {
     private static final Path PRIVATE_KEY_FILE = ROOT_TEST_FOLDER.resolve("id_rsa");
     private static final Path PUBLIC_KEY_FILE  = ROOT_TEST_FOLDER.resolve("id_rsa.pub");
 
-    private static RSAPrivateKey privateKey;
-    private static RSAPublicKey  publicKey;
+    private static DSAPrivateKey privateKey;
+    private static DSAPublicKey  publicKey;
 
 
     @BeforeClass
@@ -39,15 +39,15 @@ public class KeyPairUtilsTest {
 
         KeyPairGenerator keyPairGenerator;
         try {
-            keyPairGenerator = KeyPairGenerator.getInstance("RSA");
+            keyPairGenerator = KeyPairGenerator.getInstance("DSA");
         } catch (NoSuchAlgorithmException e) {
             throw new InitializationException(e);
         }
 
         KeyPair keyPair = keyPairGenerator.generateKeyPair();
 
-        privateKey = (RSAPrivateKey) keyPair.getPrivate();
-        publicKey = (RSAPublicKey) keyPair.getPublic();
+        privateKey = (DSAPrivateKey) keyPair.getPrivate();
+        publicKey = (DSAPublicKey) keyPair.getPublic();
     }
 
     @AfterClass
@@ -59,7 +59,7 @@ public class KeyPairUtilsTest {
     public void testPrivate()
             throws IOException, InvalidKeySpecException, NoSuchAlgorithmException {
         KeyPairUtils.writePrivateKey(privateKey, PRIVATE_KEY_FILE.toString());
-        RSAPrivateKey result = KeyPairUtils.readPrivateKey(PRIVATE_KEY_FILE.toString());
+        DSAPrivateKey result = KeyPairUtils.readPrivateKey(PRIVATE_KEY_FILE.toString());
 
         assertArrayEquals("Private key bytes are not equals", privateKey.getEncoded(), result.getEncoded());
     }
@@ -68,7 +68,7 @@ public class KeyPairUtilsTest {
     public void testPublic()
             throws IOException, InvalidKeySpecException, NoSuchAlgorithmException {
         KeyPairUtils.writePublicKey(publicKey, PUBLIC_KEY_FILE.toString());
-        RSAPublicKey result = KeyPairUtils.readPublicKey(PUBLIC_KEY_FILE.toString());
+        DSAPublicKey result = KeyPairUtils.readPublicKey(PUBLIC_KEY_FILE.toString());
 
         assertArrayEquals("Public key bytes are not equals", publicKey.getEncoded(), result.getEncoded());
     }
