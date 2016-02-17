@@ -6,14 +6,14 @@ import org.rmatil.sync.client.console.ItemStatusHolder;
 import org.rmatil.sync.client.console.io.Input;
 import org.rmatil.sync.client.console.io.Output;
 import org.rmatil.sync.client.console.item.ExitItem;
-import org.rmatil.sync.client.console.item.ShareItem;
-import org.rmatil.sync.client.console.item.UnshareItem;
+import org.rmatil.sync.client.console.item.KeyItem;
+import org.rmatil.sync.client.console.item.NodeLocationsItem;
 import org.rmatil.sync.core.Sync;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class SharingMenu implements IMenu {
+public class DhtMenu implements IMenu {
 
     protected Sync sync;
 
@@ -21,12 +21,12 @@ public class SharingMenu implements IMenu {
 
     protected List<IItem> menuItems;
 
-    public SharingMenu(Sync sync) {
+    public DhtMenu(Sync sync) {
         this.sync = sync;
         this.itemStatus = new ItemStatusHolder(ItemStatus.RUNNING);
         this.menuItems = new ArrayList<>();
-        this.menuItems.add(new ShareItem(this.sync));
-        this.menuItems.add(new UnshareItem(this.sync));
+        this.menuItems.add(new NodeLocationsItem(this.sync.getNodeManager(), this.sync.getNode().getUser().getUserName()));
+        this.menuItems.add(new KeyItem(this.sync.getNodeManager(), this.sync.getNode().getUser()));
         this.menuItems.add(new ExitItem(this.itemStatus));
     }
 
@@ -43,18 +43,18 @@ public class SharingMenu implements IMenu {
             if (selection >= 0 && selection <= this.menuItems.size() - 1) {
                 this.menuItems.get(selection).execute();
             } else {
-                Output.println("Invalid selection. Try again");
+                Output.println("Invalid selection. Try again ");
             }
         }
     }
 
     @Override
     public String getName() {
-        return "Menu Share";
+        return "Menu DHT";
     }
 
     @Override
     public String getDescription() {
-        return "Provide options/share or unshare files or directory";
+        return "Provide access to values stored in the DHT";
     }
 }

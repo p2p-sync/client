@@ -3,6 +3,7 @@ package org.rmatil.sync.client.console;
 import org.rmatil.sync.client.console.io.Input;
 import org.rmatil.sync.client.console.io.Output;
 import org.rmatil.sync.client.console.item.ExitItem;
+import org.rmatil.sync.client.console.menu.DhtMenu;
 import org.rmatil.sync.client.console.menu.SharingMenu;
 import org.rmatil.sync.core.Sync;
 
@@ -23,6 +24,7 @@ public class Console {
         this.itemStatus = new ItemStatusHolder(ItemStatus.RUNNING);
         this.items = new ArrayList<>();
         this.items.add(new SharingMenu(this.sync));
+        this.items.add(new DhtMenu(this.sync));
         this.items.add(new ExitItem(this.itemStatus));
     }
 

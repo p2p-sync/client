@@ -41,6 +41,8 @@ public class InitCommand implements ICliRunnable {
                 // first create a default application config
                 Path configDir = Sync.createDefaultApplicationConfig();
 
+                // TODO: create public private key, if not yet existing
+
                 if (null != this.syncFolder) {
                     IValidator validator = new PathValidator(this.syncFolder);
 
