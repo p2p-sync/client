@@ -10,6 +10,14 @@
 
     <repositories>
         <repository>
+            <id>commons-mvn-repo</id>
+            <url>https://raw.github.com/p2p-sync/commons/mvn-repo/</url>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>always</updatePolicy>
+            </snapshots>
+        </repository>
+        <repository>
             <id>sync-mvn-repo</id>
             <url>https://raw.github.com/p2p-sync/sync/mvn-repo/</url>
             <snapshots>
