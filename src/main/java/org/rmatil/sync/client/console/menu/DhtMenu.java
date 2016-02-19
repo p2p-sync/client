@@ -46,6 +46,9 @@ public class DhtMenu implements IMenu {
                 Output.println("Invalid selection. Try again ");
             }
         }
+
+        // reset the status to running for next execution
+        this.itemStatus.setItemStatus(ItemStatus.RUNNING);
     }
 
     @Override
