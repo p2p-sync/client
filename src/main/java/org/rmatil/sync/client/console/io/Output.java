@@ -11,9 +11,7 @@ public class Output {
     /**
      * The maximum gap size
      */
-    public static final int MAX_GAP_SIZE = 20;
-
-    public static final int MAX_IP_GAP_SIZE = 30;
+    public static final int MAX_GAP_SIZE = 30;
 
     // TODO: may be use buffered writer or something to write on the same place in the console
 
