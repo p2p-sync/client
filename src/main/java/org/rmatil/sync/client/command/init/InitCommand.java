@@ -5,6 +5,7 @@ import com.github.rvesse.airline.annotations.Command;
 import com.github.rvesse.airline.annotations.Option;
 import com.github.rvesse.airline.annotations.restrictions.Required;
 import org.rmatil.sync.client.command.ICliRunnable;
+import org.rmatil.sync.client.console.io.Output;
 import org.rmatil.sync.client.validator.IValidator;
 import org.rmatil.sync.client.validator.PathValidator;
 import org.rmatil.sync.core.Sync;
@@ -33,13 +34,28 @@ public class InitCommand implements ICliRunnable {
     @Required
     private String syncFolder;
 
+    @Option(name = {"-a", "--app-config-path"}, title = "AppConfigPath", arity = 1, description = "The path to the application config")
+    private String applicationConfigPath;
+
     @Override
     public int run() {
         if (! help.showHelpIfRequested()) {
             Path syncFolderPath = Paths.get(this.syncFolder).toAbsolutePath();
             try {
                 // first create a default application config
-                Path configDir = Sync.createDefaultApplicationConfig();
+                Path configDir;
+                if (null == this.applicationConfigPath) {
+                    configDir = Sync.createDefaultApplicationConfig();
+                } else {
+                    IValidator validator = new PathValidator(this.applicationConfigPath);
+
+                    if (! validator.validate()) {
+                        Output.println("Path " + this.applicationConfigPath + " does not exist");
+                        return 1;
+                    }
+
+                    configDir = Sync.createDefaultApplicationConfig(Paths.get(this.applicationConfigPath));
+                }
 
                 // TODO: create public private key, if not yet existing
 
@@ -47,17 +63,17 @@ public class InitCommand implements ICliRunnable {
                     IValidator validator = new PathValidator(this.syncFolder);
 
                     if (! validator.validate()) {
-                        System.out.println("Path " + syncFolderPath + " does not exist");
+                        Output.println("Path " + syncFolderPath + " does not exist");
                         return 1;
                     }
 
                     Sync.init(syncFolderPath);
 
-                    System.out.println("Initialized sync directory at " + syncFolderPath);
-                    System.out.println("Configuration directory is at " + configDir);
+                    Output.println("Initialized sync directory at " + syncFolderPath);
+                    Output.println("Configuration directory is at " + configDir);
                 }
             } catch (IOException e) {
-                System.out.println("Failed to initialise sync folder: " + e.getMessage());
+                Output.println("Failed to initialise sync folder: " + e.getMessage());
                 return 1;
             }
         }

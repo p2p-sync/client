@@ -50,12 +50,27 @@ public class ConnectCommand implements ICliRunnable {
     @Required
     private String syncFolder;
 
+    @Option(name = {"-a", "--app-config-path"}, title = "AppConfigPath", arity = 1, description = "The path to the application config")
+    private String applicationConfigPath;
+
     @Override
     public int run() {
 
         if (! this.help.showHelpIfRequested()) {
             try {
-                ApplicationConfig appConfig = Sync.getApplicationConfig();
+                ApplicationConfig appConfig;
+                if (null == this.applicationConfigPath) {
+                    appConfig = Sync.getApplicationConfig();
+                } else {
+                    IValidator validator = new PathValidator(this.applicationConfigPath);
+
+                    if (! validator.validate()) {
+                        Output.println("Path " + this.applicationConfigPath + " does not exist");
+                        return 1;
+                    }
+
+                    appConfig = Sync.getApplicationConfig(Paths.get(this.applicationConfigPath));
+                }
 
                 String bootstrapAddress = null;
                 Integer bootstrapPort = null;

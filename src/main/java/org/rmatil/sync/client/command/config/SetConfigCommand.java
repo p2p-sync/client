@@ -4,7 +4,10 @@ import com.github.rvesse.airline.HelpOption;
 import com.github.rvesse.airline.annotations.Command;
 import com.github.rvesse.airline.annotations.Option;
 import org.rmatil.sync.client.command.ICliRunnable;
+import org.rmatil.sync.client.console.io.Output;
 import org.rmatil.sync.client.security.KeyPairUtils;
+import org.rmatil.sync.client.validator.IValidator;
+import org.rmatil.sync.client.validator.PathValidator;
 import org.rmatil.sync.core.Sync;
 import org.rmatil.sync.core.config.Config;
 import org.rmatil.sync.core.init.ApplicationConfig;
@@ -41,7 +44,7 @@ public class SetConfigCommand implements ICliRunnable {
     @Option(name = {"-p", "--password"}, title = "Password", arity = 1, description = "The password of the user")
     private String password;
 
-    @Option(name = {"-s", "--salt"}, title = "Salt", arity = 1, description = "The salt of the user's password")
+    @Option(name = {"-t", "--salt"}, title = "Salt", arity = 1, description = "The salt of the user's password")
     private String salt;
 
     @Option(name = {"-c", "--cache-ttl"}, title = "CacheTtl", arity = 1, description = "The time to live for elements in the DHT cache (in milliseconds)")
@@ -53,7 +56,7 @@ public class SetConfigCommand implements ICliRunnable {
     @Option(name = {"-b", "--peer-bootstrap-timeout"}, title = "PeerBootstrapTimeout", arity = 1, description = "The maximum time to wait until this peer should have been bootstrapped to the remote peer (in milliseconds)")
     private Long peerBootstrapTimeout;
 
-    @Option(name = {"-a", "--peer-shutdown-timeout"}, title = "PeerShutdownTimeout", arity = 1, description = "The maximum time to wait until this peer has successfully announced his friendly shutdown to neighbour peers (in milliseconds)")
+    @Option(name = {"-s", "--peer-shutdown-timeout"}, title = "PeerShutdownTimeout", arity = 1, description = "The maximum time to wait until this peer has successfully announced his friendly shutdown to neighbour peers (in milliseconds)")
     private Long shutdownAnnounceTimeout;
 
     @Option(name = {"-n", "--port"}, title = "Port", arity = 1, description = "The default port to use for setting up this client")
@@ -77,12 +80,26 @@ public class SetConfigCommand implements ICliRunnable {
     @Option(name = {"--generate-keypair"}, title = "GenerateKeyPair", description = "Generate a keypair and store them in the config folder")
     private boolean generateKeyPair;
 
+    @Option(name = {"-a", "--app-config-path"}, title = "AppConfigPath", arity = 1, description = "The path to the application config")
+    private String applicationConfigPath;
+
     @Override
     public int run() {
         if (! help.showHelpIfRequested()) {
-
             try {
-                ApplicationConfig appConfig = Sync.getApplicationConfig();
+                ApplicationConfig appConfig;
+                if (null == this.applicationConfigPath) {
+                    appConfig = Sync.getApplicationConfig();
+                } else {
+                    IValidator validator = new PathValidator(this.applicationConfigPath);
+
+                    if (! validator.validate()) {
+                        Output.println("Path " + this.applicationConfigPath + " does not exist");
+                        return 1;
+                    }
+
+                    appConfig = Sync.getApplicationConfig(Paths.get(this.applicationConfigPath));
+                }
 
                 if (null != this.username) {
                     appConfig.setUserName(this.username);
@@ -189,7 +206,12 @@ public class SetConfigCommand implements ICliRunnable {
 
                     KeyPair keyPair = keyPairGenerator.generateKeyPair();
 
-                    String absoluteConfigFolderPath = Config.DEFAULT.getConfigFolderPath().replaceFirst("^~", System.getProperty("user.home"));
+                    String absoluteConfigFolderPath;
+                    if (null == this.applicationConfigPath) {
+                        absoluteConfigFolderPath = Config.DEFAULT.getConfigFolderPath().replaceFirst("^~", System.getProperty("user.home"));
+                    } else {
+                        absoluteConfigFolderPath = this.applicationConfigPath;
+                    }
 
                     Path publicKeyPath = Paths.get(absoluteConfigFolderPath).resolve(Config.DEFAULT.getPublicKeyFileName());
                     Path privateKeyPath = Paths.get(absoluteConfigFolderPath).resolve(Config.DEFAULT.getPrivateKeyFileName());
@@ -202,7 +224,11 @@ public class SetConfigCommand implements ICliRunnable {
                     appConfig.setPrivateKeyPath(privateKeyPath.toString());
                 }
 
-                Sync.writeApplicationConfig(appConfig);
+                if (null == this.applicationConfigPath) {
+                    Sync.writeApplicationConfig(appConfig);
+                } else {
+                    Sync.writeApplicationConfig(appConfig, Paths.get(this.applicationConfigPath));
+                }
 
             } catch (IOException e) {
                 System.out.println("Failed to load the application config: " + e.getMessage());
