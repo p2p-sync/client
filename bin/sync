@@ -2,4 +2,4 @@
 
 
 # pass all arguments to the jar file
-java -jar ../sync-client-0.1-SNAPSHOT.jar "$@"
+java -jar ../sync-client-0.1-SNAPSHOT/sync-client-0.1-SNAPSHOT.jar "$@"

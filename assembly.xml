@@ -13,19 +13,43 @@
         </dependencySet>
     </dependencySets>
 
+    <files>
+        <file>
+            <source>LICENSE</source>
+            <outputDirectory>/</outputDirectory>
+            <destName>LICENSE</destName>
+        </file>
+        <file>
+            <source>README.md</source>
+            <outputDirectory>/</outputDirectory>
+            <destName>README.md</destName>
+        </file>
+        <file>
+            <source>bin/sync</source>
+            <outputDirectory>bin</outputDirectory>
+            <destName>sync</destName>
+        </file>
+        <file>
+            <source>src/main/resources/sync.log</source>
+            <outputDirectory>bin</outputDirectory>
+            <destName>sync.log</destName>
+        </file>
+        <file>
+            <source>src/main/resources/p2psync_rsa</source>
+            <outputDirectory>deploy</outputDirectory>
+            <destName>p2psync_rsa</destName>
+        </file>
+        <file>
+            <source>src/main/resources/p2psync_rsa.pub</source>
+            <outputDirectory>deploy</outputDirectory>
+            <destName>p2psync_rsa.pub</destName>
+        </file>
+    </files>
+
     <fileSets>
         <fileSet>
-            <includes>
-                <include>LICENSE</include>
-                <include>README.md</include>
-                <include>bin</include>
-                <include>bin/*</include>
-            </includes>
-        </fileSet>
-
-        <fileSet>
             <directory>${project.build.directory}</directory>
-            <outputDirectory></outputDirectory>
+            <outputDirectory>/</outputDirectory>
             <includes>
                 <include>*.jar</include>
             </includes>
