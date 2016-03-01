@@ -5,6 +5,8 @@ import org.rmatil.sync.network.core.model.NodeLocation;
 
 import java.security.Key;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 public class Output {
 
@@ -33,6 +35,17 @@ public class Output {
             print(nodeLocation.getClientDeviceId() + "\t");
             print(nodeLocation.getPort() + "\t");
             print(nodeLocation.getIpAddress());
+            newLine();
+        }
+
+        newLine();
+        newLine();
+    }
+
+    public static void printFileId(Map<UUID, String> map) {
+        for (Map.Entry<UUID, String> entry : map.entrySet()) {
+            print(entry.getKey() + "\t");
+            print(entry.getValue());
             newLine();
         }
 

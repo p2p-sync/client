@@ -6,6 +6,7 @@ import org.rmatil.sync.client.console.ItemStatusHolder;
 import org.rmatil.sync.client.console.io.Input;
 import org.rmatil.sync.client.console.io.Output;
 import org.rmatil.sync.client.console.item.ExitItem;
+import org.rmatil.sync.client.console.item.FileIdItem;
 import org.rmatil.sync.client.console.item.KeyItem;
 import org.rmatil.sync.client.console.item.NodeLocationsItem;
 import org.rmatil.sync.core.Sync;
@@ -26,6 +27,7 @@ public class DhtMenu implements IMenu {
         this.itemStatus = new ItemStatusHolder(ItemStatus.RUNNING);
         this.menuItems = new ArrayList<>();
         this.menuItems.add(new NodeLocationsItem(this.sync.getNodeManager(), this.sync.getNode().getUser().getUserName()));
+        this.menuItems.add(new FileIdItem(this.sync.getNode().getIdentifierManager()));
         this.menuItems.add(new KeyItem(this.sync.getNodeManager(), this.sync.getNode().getUser()));
         this.menuItems.add(new ExitItem(this.itemStatus));
     }
