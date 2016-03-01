@@ -90,7 +90,7 @@ public class ShareItem implements IItem {
             IPathElement sharedPathElement = new LocalPathElement(pathToShare.toString());
             try {
                 if (storageAdapter.isDir(sharedPathElement)) {
-                    List<IPathElement> pathElements = storageAdapter.getDirectoryContents(new LocalPathElement(rootPath.toString()));
+                    List<IPathElement> pathElements = storageAdapter.getDirectoryContents(sharedPathElement);
 
                     for (IPathElement child : pathElements) {
                         pathsToShare.add(
