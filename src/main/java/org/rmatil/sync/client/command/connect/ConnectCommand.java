@@ -122,7 +122,8 @@ public class ConnectCommand implements ICliRunnable {
                             appConfig.getPeerDiscoveryTimeout(),
                             appConfig.getPeerBootstrapTimeout(),
                             appConfig.getPeerBootstrapTimeout(),
-                            appConfig.getDefaultPort()
+                            appConfig.getDefaultPort(),
+                            appConfig.getIgnorePatterns()
                     );
 
                     System.out.println(
@@ -205,7 +206,8 @@ public class ConnectCommand implements ICliRunnable {
                                 bootstrapAddress,
                                 appConfig.getDefaultBootstrapLocation().isIpV6(), // TODO: bootstrap locatino may not be set
                                 bootstrapPort
-                        )
+                        ),
+                        appConfig.getIgnorePatterns()
                 );
 
                 System.out.println(
