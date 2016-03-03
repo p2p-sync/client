@@ -10,7 +10,7 @@ import org.rmatil.sync.client.validator.IValidator;
 import org.rmatil.sync.client.validator.PathValidator;
 import org.rmatil.sync.core.Sync;
 import org.rmatil.sync.core.config.Config;
-import org.rmatil.sync.core.init.ApplicationConfig;
+import org.rmatil.sync.core.model.ApplicationConfig;
 import org.rmatil.sync.core.model.RemoteClientLocation;
 
 import javax.inject.Inject;
