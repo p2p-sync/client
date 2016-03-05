@@ -30,8 +30,8 @@ public class FileIdItem implements IItem {
             Output.println("Current registered file ids");
             Output.newLine();
             for (IPathElement entry : entries) {
-                if (entry.getPath().equals(Config.DEFAULT.getOsFolderName())) {
-                    // skipping .sync folder
+                if (entry.getPath().startsWith(Config.DEFAULT.getOsFolderName())) {
+                    // skipping .sync folder and its contents
                     continue;
                 }
 
