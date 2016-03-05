@@ -2,6 +2,7 @@ package org.rmatil.sync.client.console.item;
 
 import org.rmatil.sync.client.console.IItem;
 import org.rmatil.sync.client.console.io.Output;
+import org.rmatil.sync.core.config.Config;
 import org.rmatil.sync.network.api.IIdentifierManager;
 import org.rmatil.sync.persistence.api.IPathElement;
 import org.rmatil.sync.persistence.api.IStorageAdapter;
@@ -29,13 +30,29 @@ public class FileIdItem implements IItem {
             Output.println("Current registered file ids");
             Output.newLine();
             for (IPathElement entry : entries) {
-                UUID fileId = this.identifierManager.getValue(entry.getPath());
+                if (entry.getPath().equals(Config.DEFAULT.getOsFolderName())) {
+                    // skipping .sync folder
+                    continue;
+                }
 
                 Output.print(entry.getPath() + "\t");
-                Output.print(fileId.toString());
+
+                try {
+                    UUID fileId = this.identifierManager.getValue(entry.getPath());
+
+                    if (null != fileId) {
+                        Output.print(fileId.toString());
+                    } else {
+                        Output.print("-");
+                    }
+
+                } catch (Exception e) {
+                    Output.print("- (Failed to fetch the ID)");
+                }
+
                 Output.newLine();
             }
-            
+
         } catch (InputOutputException e) {
             Output.println("Failed to fetch file ids: " + e.getMessage() + ". Please try again");
         }
