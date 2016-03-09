@@ -5,8 +5,8 @@ import org.rmatil.sync.client.console.io.Output;
 import org.rmatil.sync.core.config.Config;
 import org.rmatil.sync.network.api.IIdentifierManager;
 import org.rmatil.sync.persistence.api.IPathElement;
-import org.rmatil.sync.persistence.api.IStorageAdapter;
-import org.rmatil.sync.persistence.core.local.LocalPathElement;
+import org.rmatil.sync.persistence.core.tree.ITreeStorageAdapter;
+import org.rmatil.sync.persistence.core.tree.TreePathElement;
 import org.rmatil.sync.persistence.exceptions.InputOutputException;
 
 import java.util.List;
@@ -14,10 +14,10 @@ import java.util.UUID;
 
 public class FileIdItem implements IItem {
 
-    protected IStorageAdapter                  storageAdapter;
+    protected ITreeStorageAdapter              storageAdapter;
     protected IIdentifierManager<String, UUID> identifierManager;
 
-    public FileIdItem(IStorageAdapter storageAdapter, IIdentifierManager<String, UUID> identifierManager) {
+    public FileIdItem(ITreeStorageAdapter storageAdapter, IIdentifierManager<String, UUID> identifierManager) {
         this.storageAdapter = storageAdapter;
         this.identifierManager = identifierManager;
     }
@@ -25,7 +25,7 @@ public class FileIdItem implements IItem {
     @Override
     public void execute() {
         try {
-            List<IPathElement> entries = this.storageAdapter.getDirectoryContents(new LocalPathElement(""));
+            List<TreePathElement> entries = this.storageAdapter.getDirectoryContents(new TreePathElement(""));
 
             Output.println("Current registered file ids");
             Output.newLine();

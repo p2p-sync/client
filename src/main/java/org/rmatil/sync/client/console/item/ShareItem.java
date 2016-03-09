@@ -7,8 +7,8 @@ import org.rmatil.sync.core.Sync;
 import org.rmatil.sync.core.exception.SharingFailedException;
 import org.rmatil.sync.core.syncer.sharing.event.ShareEvent;
 import org.rmatil.sync.persistence.api.IPathElement;
-import org.rmatil.sync.persistence.api.IStorageAdapter;
-import org.rmatil.sync.persistence.core.local.LocalPathElement;
+import org.rmatil.sync.persistence.core.tree.ITreeStorageAdapter;
+import org.rmatil.sync.persistence.core.tree.TreePathElement;
 import org.rmatil.sync.persistence.exceptions.InputOutputException;
 import org.rmatil.sync.version.api.AccessType;
 
@@ -86,11 +86,11 @@ public class ShareItem implements IItem {
             List<ShareEvent> pathsToShare = new ArrayList<>();
             pathsToShare.add(shareEvent);
 
-            IStorageAdapter storageAdapter = this.sync.getStorageAdapter();
-            IPathElement sharedPathElement = new LocalPathElement(pathToShare.toString());
+            ITreeStorageAdapter storageAdapter = this.sync.getStorageAdapter();
+            TreePathElement sharedPathElement = new TreePathElement(pathToShare.toString());
             try {
                 if (storageAdapter.isDir(sharedPathElement)) {
-                    List<IPathElement> pathElements = storageAdapter.getDirectoryContents(sharedPathElement);
+                    List<TreePathElement> pathElements = storageAdapter.getDirectoryContents(sharedPathElement);
 
                     for (IPathElement child : pathElements) {
                         pathsToShare.add(
