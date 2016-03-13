@@ -5,16 +5,18 @@ import com.github.rvesse.airline.annotations.Command;
 import com.github.rvesse.airline.annotations.Option;
 import org.rmatil.sync.client.command.ICliRunnable;
 import org.rmatil.sync.client.console.io.Output;
-import org.rmatil.sync.client.security.KeyPairUtils;
+import org.rmatil.sync.client.util.FileUtils;
 import org.rmatil.sync.client.validator.IValidator;
 import org.rmatil.sync.client.validator.PathValidator;
-import org.rmatil.sync.core.Sync;
 import org.rmatil.sync.core.config.Config;
 import org.rmatil.sync.core.model.ApplicationConfig;
 import org.rmatil.sync.core.model.RemoteClientLocation;
+import org.rmatil.sync.core.security.KeyPairUtils;
 
 import javax.inject.Inject;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.KeyPair;
@@ -22,6 +24,7 @@ import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
+import java.security.spec.InvalidKeySpecException;
 
 @Command(name = "set-config", description = "Set application wide configuration values")
 public class SetConfigCommand implements ICliRunnable {
@@ -71,9 +74,6 @@ public class SetConfigCommand implements ICliRunnable {
     @Option(name = {"--bootstrap-ip"}, title = "BootstrapIP", arity = 1, description = "The ip address of another online client to which this device should bootstrap on start up")
     private String bootstrapIp;
 
-    @Option(name = {"--ipv6"}, title = "IpV6", description = "Whether the IP address is an IPv6 address")
-    private boolean isIpV6;
-
     @Option(name = {"--bootstrap-port"}, title = "BootstrapPort", arity = 1, description = "The port of the other client to which this device should bootstrap on start up")
     private Integer bootstrapPort;
 
@@ -87,19 +87,32 @@ public class SetConfigCommand implements ICliRunnable {
     public int run() {
         if (! help.showHelpIfRequested()) {
             try {
-                ApplicationConfig appConfig;
+                Path configFile;
                 if (null == this.applicationConfigPath) {
-                    appConfig = Sync.getApplicationConfig();
+                    // use the default location for the application config
+                    String resolvedFolderPath = FileUtils.resolveUserHome(org.rmatil.sync.client.config.Config.DEFAULT.getConfigFolderPath());
+                    Path configDir = Paths.get(resolvedFolderPath);
+                    configFile = configDir.resolve(org.rmatil.sync.client.config.Config.DEFAULT.getConfigFileName());
+
+                    if (! configFile.toFile().exists()) {
+                        Output.println("Default application configuration path " + configFile + " does not exist. Did you initialise the application yet?");
+                        return 1;
+                    }
                 } else {
                     IValidator validator = new PathValidator(this.applicationConfigPath);
 
                     if (! validator.validate()) {
-                        Output.println("Path " + this.applicationConfigPath + " does not exist");
+                        Output.println("Path to Application Config " + this.applicationConfigPath + " does not exist");
                         return 1;
                     }
 
-                    appConfig = Sync.getApplicationConfig(Paths.get(this.applicationConfigPath));
+                    configFile = Paths.get(this.applicationConfigPath);
                 }
+
+                byte[] content = Files.readAllBytes(configFile);
+                String json = new String(content, StandardCharsets.UTF_8);
+
+                ApplicationConfig appConfig = ApplicationConfig.fromJson(json);
 
                 if (null != this.username) {
                     appConfig.setUserName(this.username);
@@ -130,52 +143,85 @@ public class SetConfigCommand implements ICliRunnable {
                 }
 
                 if (null != this.defaultPort) {
-                    appConfig.setDefaultPort(this.defaultPort);
+                    appConfig.setPort(this.defaultPort);
                 }
 
                 if (null != this.publicKeyPath) {
-                    appConfig.setPublicKeyPath(this.publicKeyPath);
+                    IValidator pathValidator = new PathValidator(this.publicKeyPath);
+
+                    if (! pathValidator.validate()) {
+                        Output.println("Path " + this.publicKeyPath + " to public key does not exist");
+                        return 1;
+                    }
+
+                    Path keyPath = Paths.get(this.publicKeyPath);
+                    byte[] publicKeyContent = Files.readAllBytes(keyPath);
+
+                    RSAPublicKey publicKey;
+                    try {
+                        publicKey = KeyPairUtils.publicKeyFromBytes(publicKeyContent);
+                    } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+                        Output.println("Failed to use the given data as RSA public key: " + e.getMessage());
+                        return 1;
+                    }
+
+                    appConfig.setPublicKey(publicKey);
                 }
 
                 if (null != this.privateKeyPath) {
-                    appConfig.setPrivateKeyPath(this.privateKeyPath);
+                    IValidator pathValidator = new PathValidator(this.privateKeyPath);
+
+                    if (! pathValidator.validate()) {
+                        Output.println("Path " + this.privateKeyPath + " to private key does not exist");
+                        return 1;
+                    }
+
+                    Path keyPath = Paths.get(this.privateKeyPath);
+                    byte[] privateKeyContent = Files.readAllBytes(keyPath);
+
+                    RSAPrivateKey privateKey;
+                    try {
+                        privateKey = KeyPairUtils.privateKeyFromBytes(privateKeyContent);
+                    } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+                        Output.println("Failed to use the given data as RSA private key: " + e.getMessage());
+                        return 1;
+                    }
+
+                    appConfig.setPrivateKey(privateKey);
                 }
 
                 if (null != this.bootstrapIp) {
-                    if (null != appConfig.getDefaultBootstrapLocation()) {
-                        RemoteClientLocation remoteClientLocation = appConfig.getDefaultBootstrapLocation();
+                    RemoteClientLocation remoteClientLocation = appConfig.getBootstrapLocation();
 
-                        appConfig.setDefaultBootstrapLocation(
+                    if (null != remoteClientLocation) {
+                        appConfig.setBootstrapLocation(
                                 new RemoteClientLocation(
                                         this.bootstrapIp,
-                                        this.isIpV6,
                                         remoteClientLocation.getPort()
                                 )
                         );
                     } else {
                         if (null == this.bootstrapPort) {
-                            System.out.println("A bootstrap port is also required");
-                            return 1;
+                            System.out.println("Assuming default port " + Config.DEFAULT.getDefaultPort());
                         }
 
-                        appConfig.setDefaultBootstrapLocation(
+                        appConfig.setBootstrapLocation(
                                 new RemoteClientLocation(
                                         this.bootstrapIp,
-                                        this.isIpV6,
-                                        this.bootstrapPort
+                                        Config.DEFAULT.getDefaultPort()
                                 )
                         );
                     }
                 }
 
                 if (null != this.bootstrapPort) {
-                    if (null != appConfig.getDefaultBootstrapLocation()) {
-                        RemoteClientLocation remoteClientLocation = appConfig.getDefaultBootstrapLocation();
+                    RemoteClientLocation remoteClientLocation = appConfig.getBootstrapLocation();
 
-                        appConfig.setDefaultBootstrapLocation(
+                    if (null != remoteClientLocation) {
+
+                        appConfig.setBootstrapLocation(
                                 new RemoteClientLocation(
                                         remoteClientLocation.getIpAddress(),
-                                        this.isIpV6,
                                         this.bootstrapPort
                                 )
                         );
@@ -185,10 +231,9 @@ public class SetConfigCommand implements ICliRunnable {
                             return 1;
                         }
 
-                        appConfig.setDefaultBootstrapLocation(
+                        appConfig.setBootstrapLocation(
                                 new RemoteClientLocation(
                                         this.bootstrapIp,
-                                        this.isIpV6,
                                         this.bootstrapPort
                                 )
                         );
@@ -206,29 +251,12 @@ public class SetConfigCommand implements ICliRunnable {
 
                     KeyPair keyPair = keyPairGenerator.generateKeyPair();
 
-                    String absoluteConfigFolderPath;
-                    if (null == this.applicationConfigPath) {
-                        absoluteConfigFolderPath = Config.DEFAULT.getConfigFolderPath().replaceFirst("^~", System.getProperty("user.home"));
-                    } else {
-                        absoluteConfigFolderPath = this.applicationConfigPath;
-                    }
-
-                    Path publicKeyPath = Paths.get(absoluteConfigFolderPath).resolve(Config.DEFAULT.getPublicKeyFileName());
-                    Path privateKeyPath = Paths.get(absoluteConfigFolderPath).resolve(Config.DEFAULT.getPrivateKeyFileName());
-
-                    KeyPairUtils.writePublicKey((RSAPublicKey) keyPair.getPublic(), publicKeyPath.toString());
-                    KeyPairUtils.writePrivateKey((RSAPrivateKey) keyPair.getPrivate(), privateKeyPath.toString());
-
-
-                    appConfig.setPublicKeyPath(publicKeyPath.toString());
-                    appConfig.setPrivateKeyPath(privateKeyPath.toString());
+                    appConfig.setPublicKey((RSAPublicKey) keyPair.getPublic());
+                    appConfig.setPrivateKey((RSAPrivateKey) keyPair.getPrivate());
                 }
 
-                if (null == this.applicationConfigPath) {
-                    Sync.writeApplicationConfig(appConfig);
-                } else {
-                    Sync.writeApplicationConfig(appConfig, Paths.get(this.applicationConfigPath));
-                }
+                // persist all changes
+                Files.write(configFile, appConfig.toJson().getBytes(StandardCharsets.UTF_8));
 
             } catch (IOException e) {
                 System.out.println("Failed to load the application config: " + e.getMessage());

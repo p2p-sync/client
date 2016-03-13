@@ -5,15 +5,22 @@ import com.github.rvesse.airline.annotations.Command;
 import com.github.rvesse.airline.annotations.Option;
 import com.github.rvesse.airline.annotations.restrictions.Required;
 import org.rmatil.sync.client.command.ICliRunnable;
+import org.rmatil.sync.client.config.Config;
 import org.rmatil.sync.client.console.io.Output;
+import org.rmatil.sync.client.util.FileUtils;
 import org.rmatil.sync.client.validator.IValidator;
 import org.rmatil.sync.client.validator.PathValidator;
 import org.rmatil.sync.core.Sync;
+import org.rmatil.sync.core.init.ApplicationConfigFactory;
+import org.rmatil.sync.core.model.ApplicationConfig;
 
 import javax.inject.Inject;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.NoSuchAlgorithmException;
 
 @Command(name = "init", description = "Initializes the application with a default configuration")
 public class InitCommand implements ICliRunnable {
@@ -44,8 +51,11 @@ public class InitCommand implements ICliRunnable {
             try {
                 // first create a default application config
                 Path configDir;
+                ApplicationConfig appConfig = ApplicationConfigFactory.createDefaultApplicationConfig();
+
                 if (null == this.applicationConfigPath) {
-                    configDir = Sync.createDefaultApplicationConfig();
+                    String resolvedFolderPath = FileUtils.resolveUserHome(Config.DEFAULT.getConfigFolderPath());
+                    configDir = Paths.get(resolvedFolderPath);
                 } else {
                     IValidator validator = new PathValidator(this.applicationConfigPath);
 
@@ -54,10 +64,32 @@ public class InitCommand implements ICliRunnable {
                         return 1;
                     }
 
-                    configDir = Sync.createDefaultApplicationConfig(Paths.get(this.applicationConfigPath));
+                    String resolvedFolderPath = FileUtils.resolveUserHome(this.applicationConfigPath);
+                    configDir = Paths.get(resolvedFolderPath);
                 }
 
-                // TODO: create public private key, if not yet existing
+                // create configuration directory
+                if (! configDir.toFile().exists()) {
+                    Files.createDirectories(configDir);
+                }
+
+                // create config file
+                Path configFile = configDir.resolve(Config.DEFAULT.getConfigFileName());
+                if (! configFile.toFile().exists()) {
+                    Files.createFile(configFile);
+                } else {
+                    // if the config already exists, we transfer the existing
+                    // public private key pair
+                    byte[] content = Files.readAllBytes(configFile);
+                    String json = new String(content, StandardCharsets.UTF_8);
+
+                    ApplicationConfig oldConfig = ApplicationConfig.fromJson(json);
+
+                    appConfig.setPublicKey(oldConfig.getPublicKey());
+                    appConfig.setPrivateKey(oldConfig.getPrivateKey());
+                }
+
+                Files.write(configFile, appConfig.toJson().getBytes(StandardCharsets.UTF_8));
 
                 if (null != this.syncFolder) {
                     IValidator validator = new PathValidator(this.syncFolder);
@@ -71,8 +103,9 @@ public class InitCommand implements ICliRunnable {
 
                     Output.println("Initialized sync directory at " + syncFolderPath);
                     Output.println("Configuration directory is at " + configDir);
+                    Output.println("Configuration file is at " + configFile);
                 }
-            } catch (IOException e) {
+            } catch (IOException | NoSuchAlgorithmException e) {
                 Output.println("Failed to initialise sync folder: " + e.getMessage());
                 return 1;
             }

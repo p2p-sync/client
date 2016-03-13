@@ -4,14 +4,18 @@ import com.github.rvesse.airline.HelpOption;
 import com.github.rvesse.airline.annotations.Command;
 import com.github.rvesse.airline.annotations.Option;
 import org.rmatil.sync.client.command.ICliRunnable;
+import org.rmatil.sync.client.config.Config;
 import org.rmatil.sync.client.console.io.Output;
+import org.rmatil.sync.client.util.FileUtils;
 import org.rmatil.sync.client.validator.IValidator;
 import org.rmatil.sync.client.validator.PathValidator;
-import org.rmatil.sync.core.Sync;
 import org.rmatil.sync.core.model.ApplicationConfig;
+import org.rmatil.sync.core.security.KeyPairUtils;
 
 import javax.inject.Inject;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -54,17 +58,14 @@ public class GetConfigCommand implements ICliRunnable {
     @Option(name = {"-n", "--port"}, title = "Port", description = "The default port to use for setting up this client")
     private boolean defaultPort;
 
-    @Option(name = {"--publickey"}, title = "PublicKeyPath", description = "The path to the public key to use for the client")
-    private boolean publicKeyPath;
+    @Option(name = {"--publickey"}, title = "PublicKey", description = "The public key to use for the client")
+    private boolean publicKey;
 
-    @Option(name = {"--privatekey"}, title = "PrivateKeyPath", description = "The path to the private key to use for the client")
-    private boolean privateKeyPath;
+    @Option(name = {"--privatekey"}, title = "PrivateKey", description = "The private key to use for the client")
+    private boolean privateKey;
 
     @Option(name = {"--bootstrap-ip"}, title = "BootstrapIp", description = "The ip address of another online client to which this device should bootstrap on start up")
     private boolean bootstrapIp;
-
-    @Option(name = {"--ipv6"}, title = "IpV6", description = "Whether the IP address is an IPv6 address")
-    private boolean isIpV6;
 
     @Option(name = {"--bootstrap-port"}, title = "BootstrapPort", description = "The port of the other client to which this device should bootstrap on start up")
     private boolean bootstrapPort;
@@ -77,9 +78,17 @@ public class GetConfigCommand implements ICliRunnable {
         if (! help.showHelpIfRequested()) {
 
             try {
-                ApplicationConfig appConfig;
+                Path configFile;
                 if (null == this.applicationConfigPath) {
-                    appConfig = Sync.getApplicationConfig();
+                    // use the default location for the application config
+                    String resolvedFolderPath = FileUtils.resolveUserHome(Config.DEFAULT.getConfigFolderPath());
+                    Path configDir = Paths.get(resolvedFolderPath);
+                    configFile = configDir.resolve(Config.DEFAULT.getConfigFileName());
+
+                    if (! configFile.toFile().exists()) {
+                        Output.println("Default application configuration path " + configFile + " does not exist. Did you initialise the application yet?");
+                        return 1;
+                    }
                 } else {
                     IValidator validator = new PathValidator(this.applicationConfigPath);
 
@@ -88,75 +97,80 @@ public class GetConfigCommand implements ICliRunnable {
                         return 1;
                     }
 
-                    appConfig = Sync.getApplicationConfig(Paths.get(this.applicationConfigPath));
+                    configFile = Paths.get(this.applicationConfigPath);
                 }
 
+                byte[] content = Files.readAllBytes(configFile);
+                String json = new String(content, StandardCharsets.UTF_8);
+
+                ApplicationConfig appConfig = ApplicationConfig.fromJson(json);
+
                 if (this.username) {
-                    System.out.println("Username: " + appConfig.getUserName());
+                    Output.println("Username: " + appConfig.getUserName());
                 }
 
                 if (this.password) {
-                    System.out.println("Password: " + appConfig.getPassword());
+                    Output.println("Password: " + appConfig.getPassword());
                 }
 
                 if (this.salt) {
-                    System.out.println("Salt: " + appConfig.getSalt());
+                    Output.println("Salt: " + appConfig.getSalt());
                 }
 
                 if (this.cacheTtl) {
-                    System.out.println("CacheTtl: " + appConfig.getCacheTtl() + " ms");
+                    Output.println("CacheTtl: " + appConfig.getCacheTtl() + " ms");
                 }
 
                 if (this.peerDiscoveryTimeout) {
-                    System.out.println("Peer Discovery Timeout: " + appConfig.getPeerDiscoveryTimeout() + " ms");
+                    Output.println("Peer Discovery Timeout: " + appConfig.getPeerDiscoveryTimeout() + " ms");
                 }
 
                 if (this.peerBootstrapTimeout) {
-                    System.out.println("Peer Bootstrap Timeout: " + appConfig.getPeerBootstrapTimeout() + " ms");
+                    Output.println("Peer Bootstrap Timeout: " + appConfig.getPeerBootstrapTimeout() + " ms");
                 }
 
                 if (this.shutdownAnnounceTimeout) {
-                    System.out.println("Peer Shutdown Timeout: " + appConfig.getShutdownAnnounceTimeout() + " ms");
+                    Output.println("Peer Shutdown Timeout: " + appConfig.getShutdownAnnounceTimeout() + " ms");
                 }
 
                 if (this.defaultPort) {
-                    System.out.println("Default Port: " + appConfig.getDefaultPort());
+                    Output.println("Default Port: " + appConfig.getPort());
                 }
 
-                if (this.publicKeyPath) {
-                    System.out.println("Public Key Path: " + appConfig.getPublicKeyPath());
-                }
-
-                if (this.privateKeyPath) {
-                    System.out.println("Private Key Path: " + appConfig.getPrivateKeyPath());
-                }
-
-                if (this.bootstrapIp) {
-                    if (null != appConfig.getDefaultBootstrapLocation()) {
-                        System.out.println("Bootstrap Location: " + appConfig.getDefaultBootstrapLocation().getIpAddress());
+                if (this.publicKey) {
+                    if (null == appConfig.getPublicKey()) {
+                        Output.println("Public Key: null");
                     } else {
-                        System.out.println("Bootstrap Location: null");
+                        Output.println("Public Key: " + KeyPairUtils.byteToHexString(appConfig.getPublicKey().getEncoded()));
                     }
                 }
 
-                if (this.isIpV6) {
-                    if (null != appConfig.getDefaultBootstrapLocation()) {
-                        System.out.println("IsIPv6: " + appConfig.getDefaultBootstrapLocation().isIpV6());
+                if (this.privateKey) {
+                    if (null == appConfig.getPrivateKey()) {
+                        Output.println("Private Key: null");
                     } else {
-                        System.out.println("IsIPv6: false");
+                        Output.println("Private Key: " + KeyPairUtils.byteToHexString(appConfig.getPrivateKey().getEncoded()));
+                    }
+                }
+
+                if (this.bootstrapIp) {
+                    if (null != appConfig.getBootstrapLocation()) {
+                        Output.println("Bootstrap Location: " + appConfig.getBootstrapLocation().getIpAddress());
+                    } else {
+                        Output.println("Bootstrap Location: null");
                     }
                 }
 
                 if (this.bootstrapPort) {
-                    if (null != appConfig.getDefaultBootstrapLocation()) {
-                        System.out.println("Bootstrap Port: " + appConfig.getDefaultBootstrapLocation().getPort());
+                    if (null != appConfig.getBootstrapLocation()) {
+                        Output.println("Bootstrap Port: " + appConfig.getBootstrapLocation().getPort());
                     } else {
-                        System.out.println("Bootstrap Port: null");
+                        Output.println("Bootstrap Port: null");
                     }
                 }
 
             } catch (IOException e) {
-                System.out.println("Failed to load the application config: " + e.getMessage());
+                Output.println("Failed to load the application config: " + e.getMessage());
                 return 1;
             }
 
