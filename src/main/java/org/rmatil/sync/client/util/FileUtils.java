@@ -2,7 +2,7 @@ package org.rmatil.sync.client.util;
 
 import java.io.File;
 
-public class FileUtil {
+public class FileUtils {
 
     /**
      * Deletes recursively the given file (if it is a directory)
@@ -28,5 +28,9 @@ public class FileUtil {
         } else {
             return file.delete();
         }
+    }
+
+    public static String resolveUserHome(String path) {
+        return path.replaceFirst("^~", System.getProperty("user.home"));
     }
 }

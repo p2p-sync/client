@@ -4,7 +4,7 @@ import com.github.rvesse.airline.HelpOption;
 import com.github.rvesse.airline.annotations.Command;
 import com.github.rvesse.airline.annotations.Option;
 import org.rmatil.sync.client.command.ICliRunnable;
-import org.rmatil.sync.client.util.FileUtil;
+import org.rmatil.sync.client.util.FileUtils;
 import org.rmatil.sync.client.validator.IValidator;
 import org.rmatil.sync.client.validator.PathValidator;
 import org.rmatil.sync.core.config.Config;
@@ -85,13 +85,13 @@ public class CleanCommand implements ICliRunnable {
      * @param rootPath The root path to the synced folder
      */
     private void removeObjectStoreFolder(String rootPath) {
-        rootPath = rootPath.replaceFirst("^~", System.getProperty("user.home"));
+        rootPath = FileUtils.resolveUserHome(rootPath);
         Path syncedFolder = Paths.get(rootPath);
 
         Path objectStoreFolder = syncedFolder.resolve(Config.DEFAULT.getOsFolderName());
 
         if (objectStoreFolder.toFile().exists()) {
-            FileUtil.delete(objectStoreFolder.toFile());
+            FileUtils.delete(objectStoreFolder.toFile());
         }
     }
 
@@ -99,13 +99,13 @@ public class CleanCommand implements ICliRunnable {
      * Remove the config folder in the user's home directory
      */
     private void removeConfigurationFolder() {
-        String configFolderPath = Config.DEFAULT.getConfigFolderPath();
-        configFolderPath = configFolderPath.replaceFirst("^~", System.getProperty("user.home"));
+        String configFolderPath = org.rmatil.sync.client.config.Config.DEFAULT.getConfigFolderPath();
+        configFolderPath = FileUtils.resolveUserHome(configFolderPath);
 
         Path configPath = Paths.get(configFolderPath).toAbsolutePath();
 
         if (configPath.toFile().exists()) {
-            FileUtil.delete(configPath.toFile());
+            FileUtils.delete(configPath.toFile());
         }
     }
 }
