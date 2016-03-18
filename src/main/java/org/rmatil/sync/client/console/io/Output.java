@@ -15,7 +15,8 @@ public class Output {
      */
     public static final int MAX_GAP_SIZE = 30;
 
-    // TODO: may be use buffered writer or something to write on the same place in the console
+    // TODO: may be use buffered writer or something to write on the same place in the console (https://github.com/p2p-sync/client/issues/5)
+
 
     public static void printItems(List<IItem> items) {
         for (int i = 0; i < items.size(); i++) {
