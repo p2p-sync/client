@@ -61,7 +61,15 @@ public class ShareItem implements IItem {
             Output.println("Type the name of the user to share with");
             String username = Input.getInput();
 
-            // TODO: check whether user exists
+            try {
+                if (! this.sync.getNode().getUserManager().isRegistered(username)) {
+                    Output.println("No user found for username " + username + ". Sharing failed");
+                    return;
+                }
+            } catch (InputOutputException e) {
+                Output.println("Could not check whether user with username " + username + " exists. Sharing failed");
+                return;
+            }
 
             AccessType accessType = AccessType.READ;
             boolean valid = false;
