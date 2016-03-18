@@ -7,6 +7,7 @@ import org.rmatil.sync.core.Sync;
 import org.rmatil.sync.core.exception.SharingFailedException;
 import org.rmatil.sync.core.syncer.sharing.event.UnshareEvent;
 import org.rmatil.sync.persistence.api.IPathElement;
+import org.rmatil.sync.persistence.api.StorageType;
 import org.rmatil.sync.persistence.core.tree.ITreeStorageAdapter;
 import org.rmatil.sync.persistence.core.tree.TreePathElement;
 import org.rmatil.sync.persistence.exceptions.InputOutputException;
@@ -38,11 +39,22 @@ public class UnshareItem implements IItem {
             Output.println("Type the relative path within the synced folder to the file which should be unshared");
             String inputPath = Input.getInput();
 
-            Path rootPath = this.sync.getRootPath();
-            Path pathToShare = rootPath.resolve(inputPath);
+            ITreeStorageAdapter storageAdapter = this.sync.getStorageAdapter();
 
-            if (! pathToShare.toFile().exists()) {
-                Output.println("The provided path does not exist. Please try again");
+            Path rootPath = Paths.get(storageAdapter.getRootDir().getPath());
+            Path pathToUnshare = rootPath.resolve(inputPath);
+
+            TreePathElement elementToUnshare = new TreePathElement(pathToUnshare.toString());
+
+            try {
+                if (! storageAdapter.exists(StorageType.DIRECTORY, elementToUnshare) &&
+                        ! storageAdapter.exists(StorageType.FILE, elementToUnshare)) {
+
+                    Output.println("The provided path does not exist. Please try again");
+                    continue;
+                }
+            } catch (InputOutputException e) {
+                Output.println("Could not check whether the element on path " + elementToUnshare.getPath() + " exists. Skipping...");
                 continue;
             }
 
@@ -75,7 +87,7 @@ public class UnshareItem implements IItem {
             }
 
             // now get all children
-            Output.println("Removing permissions of " + pathToShare + " and all its contents from user " + username + " (Access: " + accessType + ")");
+            Output.println("Removing permissions of " + pathToUnshare + " and all its contents from user " + username + " (Access: " + accessType + ")");
 
             UnshareEvent unshareEvent = new UnshareEvent(
                     Paths.get(inputPath),
@@ -86,11 +98,9 @@ public class UnshareItem implements IItem {
             List<UnshareEvent> pathsToShare = new ArrayList<>();
             pathsToShare.add(unshareEvent);
 
-            ITreeStorageAdapter storageAdapter = this.sync.getStorageAdapter();
-            TreePathElement sharedPathElement = new TreePathElement(pathToShare.toString());
             try {
-                if (storageAdapter.isDir(sharedPathElement)) {
-                    List<TreePathElement> pathElements = storageAdapter.getDirectoryContents(sharedPathElement);
+                if (storageAdapter.isDir(elementToUnshare)) {
+                    List<TreePathElement> pathElements = storageAdapter.getDirectoryContents(elementToUnshare);
 
                     for (IPathElement child : pathElements) {
                         pathsToShare.add(

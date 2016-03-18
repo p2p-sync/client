@@ -3,6 +3,7 @@ package org.rmatil.sync.client.command.config;
 import com.github.rvesse.airline.HelpOption;
 import com.github.rvesse.airline.annotations.Command;
 import com.github.rvesse.airline.annotations.Option;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.rmatil.sync.client.command.ICliRunnable;
 import org.rmatil.sync.client.console.io.Output;
 import org.rmatil.sync.client.util.FileUtils;
@@ -11,7 +12,6 @@ import org.rmatil.sync.client.validator.PathValidator;
 import org.rmatil.sync.core.config.Config;
 import org.rmatil.sync.core.model.ApplicationConfig;
 import org.rmatil.sync.core.model.RemoteClientLocation;
-import org.rmatil.sync.core.security.KeyPairUtils;
 
 import javax.inject.Inject;
 import java.io.IOException;
@@ -22,9 +22,9 @@ import java.nio.file.Paths;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
+import java.security.Security;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
-import java.security.spec.InvalidKeySpecException;
 
 @Command(name = "set-config", description = "Set application wide configuration values")
 public class SetConfigCommand implements ICliRunnable {
@@ -65,12 +65,6 @@ public class SetConfigCommand implements ICliRunnable {
     @Option(name = {"-n", "--port"}, title = "Port", arity = 1, description = "The default port to use for setting up this client")
     private Integer defaultPort;
 
-    @Option(name = {"--publickey"}, title = "PublicKeyPath", arity = 1, description = "The path to the public key to use for the client")
-    private String publicKeyPath;
-
-    @Option(name = {"--privatekey"}, title = "PrivateKeyPath", arity = 1, description = "The path to the private key to use for the client")
-    private String privateKeyPath;
-
     @Option(name = {"--bootstrap-ip"}, title = "BootstrapIP", arity = 1, description = "The ip address of another online client to which this device should bootstrap on start up")
     private String bootstrapIp;
 
@@ -86,6 +80,12 @@ public class SetConfigCommand implements ICliRunnable {
     @Override
     public int run() {
         if (! help.showHelpIfRequested()) {
+
+            // add bouncy castle as security provider if not yet done
+            if (null == Security.getProvider(BouncyCastleProvider.PROVIDER_NAME)) {
+                Security.addProvider(new BouncyCastleProvider());
+            }
+
             try {
                 Path configFile;
                 if (null == this.applicationConfigPath) {
@@ -144,50 +144,6 @@ public class SetConfigCommand implements ICliRunnable {
 
                 if (null != this.defaultPort) {
                     appConfig.setPort(this.defaultPort);
-                }
-
-                if (null != this.publicKeyPath) {
-                    IValidator pathValidator = new PathValidator(this.publicKeyPath);
-
-                    if (! pathValidator.validate()) {
-                        Output.println("Path " + this.publicKeyPath + " to public key does not exist");
-                        return 1;
-                    }
-
-                    Path keyPath = Paths.get(this.publicKeyPath);
-                    byte[] publicKeyContent = Files.readAllBytes(keyPath);
-
-                    RSAPublicKey publicKey;
-                    try {
-                        publicKey = KeyPairUtils.publicKeyFromBytes(publicKeyContent);
-                    } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-                        Output.println("Failed to use the given data as RSA public key: " + e.getMessage());
-                        return 1;
-                    }
-
-                    appConfig.setPublicKey(publicKey);
-                }
-
-                if (null != this.privateKeyPath) {
-                    IValidator pathValidator = new PathValidator(this.privateKeyPath);
-
-                    if (! pathValidator.validate()) {
-                        Output.println("Path " + this.privateKeyPath + " to private key does not exist");
-                        return 1;
-                    }
-
-                    Path keyPath = Paths.get(this.privateKeyPath);
-                    byte[] privateKeyContent = Files.readAllBytes(keyPath);
-
-                    RSAPrivateKey privateKey;
-                    try {
-                        privateKey = KeyPairUtils.privateKeyFromBytes(privateKeyContent);
-                    } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-                        Output.println("Failed to use the given data as RSA private key: " + e.getMessage());
-                        return 1;
-                    }
-
-                    appConfig.setPrivateKey(privateKey);
                 }
 
                 if (null != this.bootstrapIp) {

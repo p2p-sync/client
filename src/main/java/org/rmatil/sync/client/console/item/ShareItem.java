@@ -7,6 +7,7 @@ import org.rmatil.sync.core.Sync;
 import org.rmatil.sync.core.exception.SharingFailedException;
 import org.rmatil.sync.core.syncer.sharing.event.ShareEvent;
 import org.rmatil.sync.persistence.api.IPathElement;
+import org.rmatil.sync.persistence.api.StorageType;
 import org.rmatil.sync.persistence.core.tree.ITreeStorageAdapter;
 import org.rmatil.sync.persistence.core.tree.TreePathElement;
 import org.rmatil.sync.persistence.exceptions.InputOutputException;
@@ -38,11 +39,22 @@ public class ShareItem implements IItem {
             Output.println("Type the relative path within the synced folder to the file which should be shared");
             String inputPath = Input.getInput();
 
-            Path rootPath = this.sync.getRootPath();
+            ITreeStorageAdapter storageAdapter = this.sync.getStorageAdapter();
+
+            Path rootPath = Paths.get(storageAdapter.getRootDir().getPath());
             Path pathToShare = rootPath.resolve(inputPath);
 
-            if (! pathToShare.toFile().exists()) {
-                Output.println("The provided path does not exist. Please try again");
+            TreePathElement elementToShare = new TreePathElement(pathToShare.toString());
+
+            try {
+                if (! storageAdapter.exists(StorageType.DIRECTORY, elementToShare) &&
+                        ! storageAdapter.exists(StorageType.FILE, elementToShare)) {
+
+                    Output.println("The provided path does not exist. Please try again");
+                    continue;
+                }
+            } catch (InputOutputException e) {
+                Output.println("Could not check whether the element on path " + elementToShare.getPath() + " exists. Skipping...");
                 continue;
             }
 
@@ -86,11 +98,9 @@ public class ShareItem implements IItem {
             List<ShareEvent> pathsToShare = new ArrayList<>();
             pathsToShare.add(shareEvent);
 
-            ITreeStorageAdapter storageAdapter = this.sync.getStorageAdapter();
-            TreePathElement sharedPathElement = new TreePathElement(pathToShare.toString());
             try {
-                if (storageAdapter.isDir(sharedPathElement)) {
-                    List<TreePathElement> pathElements = storageAdapter.getDirectoryContents(sharedPathElement);
+                if (storageAdapter.isDir(elementToShare)) {
+                    List<TreePathElement> pathElements = storageAdapter.getDirectoryContents(elementToShare);
 
                     for (IPathElement child : pathElements) {
                         pathsToShare.add(

@@ -13,6 +13,9 @@ import org.rmatil.sync.client.validator.PathValidator;
 import org.rmatil.sync.core.Sync;
 import org.rmatil.sync.core.init.ApplicationConfigFactory;
 import org.rmatil.sync.core.model.ApplicationConfig;
+import org.rmatil.sync.persistence.core.tree.ITreeStorageAdapter;
+import org.rmatil.sync.persistence.core.tree.local.LocalStorageAdapter;
+import org.rmatil.sync.persistence.exceptions.InputOutputException;
 
 import javax.inject.Inject;
 import java.io.IOException;
@@ -99,7 +102,13 @@ public class InitCommand implements ICliRunnable {
                         return 1;
                     }
 
-                    Sync.init(syncFolderPath);
+                    ITreeStorageAdapter treeStorageAdapter = new LocalStorageAdapter(syncFolderPath);
+                    try {
+                        Sync.init(treeStorageAdapter);
+                    } catch (InputOutputException e) {
+                        Output.println("Could not initialise sync at directory " + syncFolderPath + ": " + e.getMessage());
+                        return 1;
+                    }
 
                     Output.println("Initialized sync directory at " + syncFolderPath);
                     Output.println("Configuration directory is at " + configDir);
