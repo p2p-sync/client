@@ -1,5 +1,27 @@
 #!/usr/bin/env bash
 
+# from http://stackoverflow.com/questions/7334754/correct-way-to-check-java-version-from-bash-script
+
+if which java >/dev/null 2>&1 ; then
+    # found java executable in PATH
+    JAVA=java
+elif [[ -n "$JAVA_HOME" ]] && [[ -x "$JAVA_HOME/bin/java" ]];  then
+    # found java executable in JAVA_HOME
+    JAVA="${JAVA_HOME}/bin/java"
+else
+    echo "Java must be installed to run this client"
+    exit 1;
+fi
+
+
+if [[ "$JAVA" ]]; then
+    version=$("$JAVA" -version 2>&1 | awk -F '"' '/version/ {print $2}')
+    if [[ "$version" < "1.8" ]]; then
+        echo "P2P Sync requires Java in version >= 8"
+        exit 1;
+    fi
+fi
+
 
 # pass all arguments to the jar file
 java -jar ../sync-client-0.1-SNAPSHOT/sync-client-0.1-SNAPSHOT.jar "$@"
