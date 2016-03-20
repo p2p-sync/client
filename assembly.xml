@@ -34,16 +34,6 @@
             <outputDirectory>bin</outputDirectory>
             <destName>sync.log</destName>
         </file>
-        <file>
-            <source>src/main/resources/p2psync_rsa</source>
-            <outputDirectory>deploy</outputDirectory>
-            <destName>p2psync_rsa</destName>
-        </file>
-        <file>
-            <source>src/main/resources/p2psync_rsa.pub</source>
-            <outputDirectory>deploy</outputDirectory>
-            <destName>p2psync_rsa.pub</destName>
-        </file>
     </files>
 
     <fileSets>
