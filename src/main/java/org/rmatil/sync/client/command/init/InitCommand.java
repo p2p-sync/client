@@ -54,7 +54,7 @@ public class InitCommand implements ICliRunnable {
             try {
                 // first create a default application config
                 Path configDir;
-                ApplicationConfig appConfig = ApplicationConfigFactory.createDefaultApplicationConfig();
+                ApplicationConfig appConfig = ApplicationConfigFactory.createBootstrapApplicationConfig();
 
                 if (null == this.applicationConfigPath) {
                     String resolvedFolderPath = FileUtils.resolveUserHome(Config.DEFAULT.getConfigFolderPath());

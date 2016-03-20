@@ -16,6 +16,7 @@ import org.rmatil.sync.core.exception.InitializationStartException;
 import org.rmatil.sync.core.model.ApplicationConfig;
 import org.rmatil.sync.core.model.RemoteClientLocation;
 import org.rmatil.sync.network.core.model.ClientDevice;
+import org.rmatil.sync.network.core.model.NodeLocation;
 import org.rmatil.sync.persistence.core.tree.local.LocalStorageAdapter;
 
 import javax.inject.Inject;
@@ -131,15 +132,15 @@ public class ConnectCommand implements ICliRunnable {
 
                 // ignore a bootstrap port if specified
                 Sync sync = new Sync(new LocalStorageAdapter(Paths.get(this.syncFolder)));
-                ClientDevice clientDevice = sync.connect(appConfig);
+                NodeLocation nodeLocation = sync.connect(appConfig);
 
                 Output.println(
                         "Started client " +
-                                clientDevice.getClientDeviceId() +
+                                nodeLocation.getClientDeviceId() +
                                 " successfully on " +
-                                clientDevice.getPeerAddress().inetAddress().getHostAddress() +
+                                nodeLocation.getPeerAddress().inetAddress().getHostAddress() +
                                 ":" +
-                                clientDevice.getPeerAddress().tcpPort()
+                                nodeLocation.getPeerAddress().tcpPort()
                 );
 
                 // also register a shutdown hook to correctly terminate Sync
