@@ -4,6 +4,8 @@ import com.github.rvesse.airline.HelpOption;
 import com.github.rvesse.airline.annotations.Command;
 import com.github.rvesse.airline.annotations.Option;
 import org.rmatil.sync.client.command.ICliRunnable;
+import org.rmatil.sync.client.console.io.Output;
+import org.rmatil.sync.client.exception.ValidationException;
 import org.rmatil.sync.client.util.FileUtils;
 import org.rmatil.sync.client.validator.IValidator;
 import org.rmatil.sync.client.validator.PathValidator;
@@ -28,7 +30,7 @@ public class CleanCommand implements ICliRunnable {
     @Inject
     private HelpOption<CleanCommand> help;
 
-    @Option(name = {"-a", "--clean-all"}, title = "CleanAll", arity = 1, description = "Remove the configuration directory as well as the object store from the specified synced folder")
+    @Option(name = {"-l", "--clean-all"}, title = "CleanAll", arity = 1, description = "Remove the configuration directory as well as the object store from the specified synced folder")
     private String cleanAll;
 
     @Option(name = {"-c", "--clean"}, title = "CleanConfig", description = "Remove the configuration directory")
@@ -36,6 +38,9 @@ public class CleanCommand implements ICliRunnable {
 
     @Option(name = {"-o", "--clean-os"}, title = "CleanObjectStore", arity = 1, description = "Remove the object store from the specified synced folder")
     private String cleanObjectStore;
+
+    @Option(name = {"-a", "--app-config-path"}, title = "AppConfigPath", arity = 1, description = "The path to the application config")
+    private String applicationConfigPath;
 
     @Override
     public int run() {
@@ -52,14 +57,24 @@ public class CleanCommand implements ICliRunnable {
                 }
 
                 this.removeObjectStoreFolder(this.cleanAll);
-                this.removeConfigurationFolder();
 
-                return 0;
+                try {
+                    this.removeConfigurationFolder();
+                    return 0;
+                } catch (ValidationException e) {
+                    Output.println(e.getMessage());
+                    return 1;
+                }
             }
 
             if (this.cleanConfig) {
-                this.removeConfigurationFolder();
-                return 0;
+                try {
+                    this.removeConfigurationFolder();
+                    return 0;
+                } catch (ValidationException e) {
+                    Output.println(e.getMessage());
+                    return 1;
+                }
             }
 
             if (null != this.cleanObjectStore) {
@@ -97,15 +112,29 @@ public class CleanCommand implements ICliRunnable {
 
     /**
      * Remove the config folder in the user's home directory
+     *
+     * @throws ValidationException If the application config path does not exist
      */
-    private void removeConfigurationFolder() {
-        String configFolderPath = org.rmatil.sync.client.config.Config.DEFAULT.getConfigFolderPath();
-        configFolderPath = FileUtils.resolveUserHome(configFolderPath);
+    private void removeConfigurationFolder()
+            throws ValidationException {
+        Path configDir;
 
-        Path configPath = Paths.get(configFolderPath).toAbsolutePath();
+        if (null == this.applicationConfigPath) {
+            String resolvedFolderPath = FileUtils.resolveUserHome(org.rmatil.sync.client.config.Config.DEFAULT.getConfigFolderPath());
+            configDir = Paths.get(resolvedFolderPath);
+        } else {
+            IValidator validator = new PathValidator(this.applicationConfigPath);
 
-        if (configPath.toFile().exists()) {
-            FileUtils.delete(configPath.toFile());
+            if (! validator.validate()) {
+                throw new ValidationException("Path " + this.applicationConfigPath + " does not exist");
+            }
+
+            String resolvedFolderPath = FileUtils.resolveUserHome(this.applicationConfigPath);
+            configDir = Paths.get(resolvedFolderPath);
+        }
+
+        if (configDir.toFile().exists()) {
+            FileUtils.delete(configDir.toFile());
         }
     }
 }

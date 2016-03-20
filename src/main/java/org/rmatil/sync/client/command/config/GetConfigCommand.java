@@ -70,7 +70,7 @@ public class GetConfigCommand implements ICliRunnable {
     @Option(name = {"--bootstrap-port"}, title = "BootstrapPort", description = "The port of the other client to which this device should bootstrap on start up")
     private boolean bootstrapPort;
 
-    @Option(name = {"-a", "--app-config-path"}, title = "AppConfigPath", arity = 1, description = "The path to the application config")
+    @Option(name = {"-a", "--app-config-path"}, title = "AppConfigPath", arity = 1, description = "The path to the application config to read the values from (if different from the default location)")
     private String applicationConfigPath;
 
     @Override

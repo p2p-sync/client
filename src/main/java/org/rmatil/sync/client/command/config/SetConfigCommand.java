@@ -71,7 +71,7 @@ public class SetConfigCommand implements ICliRunnable {
     @Option(name = {"--bootstrap-port"}, title = "BootstrapPort", arity = 1, description = "The port of the other client to which this device should bootstrap on start up")
     private Integer bootstrapPort;
 
-    @Option(name = {"--generate-keypair"}, title = "GenerateKeyPair", description = "Generate a keypair and store them in the config folder")
+    @Option(name = {"--generate-keypair"}, title = "GenerateKeyPair", description = "Generate a new RSA keypair and store them in the application config")
     private boolean generateKeyPair;
 
     @Option(name = {"-a", "--app-config-path"}, title = "AppConfigPath", arity = 1, description = "The path to the application config")
