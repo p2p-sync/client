@@ -9,13 +9,13 @@ import org.rmatil.sync.client.config.Config;
 import org.rmatil.sync.client.console.Console;
 import org.rmatil.sync.client.console.io.Output;
 import org.rmatil.sync.client.util.FileUtils;
+import org.rmatil.sync.client.validator.DirectoryValidator;
 import org.rmatil.sync.client.validator.IValidator;
 import org.rmatil.sync.client.validator.PathValidator;
 import org.rmatil.sync.core.Sync;
 import org.rmatil.sync.core.exception.InitializationStartException;
 import org.rmatil.sync.core.model.ApplicationConfig;
 import org.rmatil.sync.core.model.RemoteClientLocation;
-import org.rmatil.sync.network.core.model.ClientDevice;
 import org.rmatil.sync.network.core.model.NodeLocation;
 import org.rmatil.sync.persistence.core.tree.local.LocalStorageAdapter;
 
@@ -51,7 +51,7 @@ public class ConnectCommand implements ICliRunnable {
     @Required
     private String syncFolder;
 
-    @Option(name = {"-a", "--app-config-path"}, title = "AppConfigPath", arity = 1, description = "The path to the application config")
+    @Option(name = {"-a", "--app-config-path"}, title = "AppConfigFolderPath", arity = 1, description = "The path to the application config folder")
     private String applicationConfigPath;
 
     @Override
@@ -78,7 +78,14 @@ public class ConnectCommand implements ICliRunnable {
                         return 1;
                     }
 
-                    configFile = Paths.get(this.applicationConfigPath);
+                    IValidator directoryValidator = new DirectoryValidator(this.applicationConfigPath);
+
+                    if (! directoryValidator.validate()) {
+                        Output.println("Path " + this.applicationConfigPath + " should point to the application configuration folder instead of the configuration file");
+                        return 1;
+                    }
+
+                    configFile = Paths.get(this.applicationConfigPath).resolve(Config.DEFAULT.getConfigFileName());
                 }
 
                 byte[] content = Files.readAllBytes(configFile);
@@ -96,18 +103,27 @@ public class ConnectCommand implements ICliRunnable {
                     return 1;
                 }
 
+                // if an ip address is specified -> use it
+                // and check whether a port is specified, if not, use default port
                 if (null != this.ipAddress || null != this.port) {
-
                     if (null != this.ipAddress) {
+                        // use default port as fallback
+                        int port = org.rmatil.sync.core.config.Config.DEFAULT.getDefaultPort();
+
+                        if (null != appConfig.getBootstrapLocation()) {
+                            port = appConfig.getBootstrapLocation().getPort();
+                        }
+
                         appConfig.setBootstrapLocation(
                                 new RemoteClientLocation(
                                         this.ipAddress,
-                                        appConfig.getBootstrapLocation().getPort()
+                                        port
                                 )
                         );
                     }
 
-                    if (null != this.port) {
+                    if (null != this.port && null != appConfig.getBootstrapLocation() &&
+                            null != appConfig.getBootstrapLocation().getIpAddress()) {
                         appConfig.setBootstrapLocation(
                                 new RemoteClientLocation(
                                         appConfig.getBootstrapLocation().getIpAddress(),
@@ -117,7 +133,6 @@ public class ConnectCommand implements ICliRunnable {
                     }
 
                     Output.println("Using configured bootstrap address " + appConfig.getBootstrapLocation().getIpAddress() + ":" + appConfig.getBootstrapLocation().getPort());
-
                 } else if (null != appConfig.getBootstrapLocation() && 0 < appConfig.getBootstrapLocation().getPort() && null != appConfig.getBootstrapLocation().getIpAddress()) {
                     Output.println("Using default bootstrap address " + appConfig.getBootstrapLocation().getIpAddress() + ":" + appConfig.getBootstrapLocation().getPort());
                 } else {
