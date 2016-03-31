@@ -6,7 +6,7 @@
 
     <groupId>org.rmatil.sync.client</groupId>
     <artifactId>sync-client</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <version>1.0.0</version>
 
     <repositories>
         <repository>
@@ -186,12 +186,12 @@
         <dependency>
             <groupId>org.rmatil.sync.commons</groupId>
             <artifactId>sync-commons</artifactId>
-            <version>0.1-SNAPSHOT</version>
+            <version>1.0.0</version>
         </dependency>
         <dependency>
             <groupId>org.rmatil.sync</groupId>
             <artifactId>sync</artifactId>
-            <version>0.1-SNAPSHOT</version>
+            <version>1.0.0</version>
         </dependency>
         <dependency>
             <groupId>com.github.rvesse</groupId>
